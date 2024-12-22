@@ -8,14 +8,24 @@ export interface PropertyData {
 }
 
 export interface PropertyDetails {
-  parking: string;
-  floors: number;
-  zoning: string;
-  tenancy: string;
-  occupancy: string;
-  construction: string;
-  utilities: string;
-  clearHeight?: string;
+  parking?: string | null;
+  floors?: number | null;
+  zoning?: string | null;
+  tenancy?: string | null;
+  occupancy?: string | null;
+  construction?: string | null;
+  utilities?: string | null;
+  clearHeight?: string | null;
+  propertySubType?: string | null;
+  beds?: number | null;
+  baths?: number | null;
+  bathsFull?: number | null;
+  bathsHalf?: number | null;
+  isNewConstruction?: boolean;
+  isForeclosure?: boolean;
+  lastSoldDate?: string;
+  listDate?: string;
+  estimatedValue?: string;
 }
 
 export interface Property {
@@ -24,11 +34,11 @@ export interface Property {
   price: number;
   propertyType: string;
   sqft: number;
-  yearBuilt: number;
-  capRate: string;
-  pricePerSqFt: number;
-  lotSize: string;
-  description: string;
-  highlights: string[];
-  propertyDetails: PropertyDetails;
+  yearBuilt?: number | null;
+  capRate?: string | null;
+  pricePerSqFt?: number | null;
+  lotSize?: string | null;
+  description?: string | null;
+  highlights?: string[];
+  propertyDetails?: PropertyDetails;
 }

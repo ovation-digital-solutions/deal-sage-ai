@@ -1,111 +1,97 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
 import Anthropic from '@anthropic-ai/sdk';
-import { PropertyData } from '@/types/property';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
-interface AnalyzeRequestBody {
-  propertyId: string;
-}
-
-interface LoopNetPropertyDetail {
-  price: {
-    amount: number;
-  };
-  building: {
-    units: {
-      totalUnits: number;
-    };
-    bathrooms: number;
-    size: {
-      amount: number;
-    };
-  };
-  address: {
-    streetAddress: string;
-    city: string;
-    state: string;
-  };
-}
-
 export async function POST(req: Request) {
   try {
-    const { propertyId }: AnalyzeRequestBody = await req.json();
+    const body = await req.json();
+    console.log('Received property data:', body);
 
-    // Fetch detailed property data from LoopNet API using propertyId
-    const propertyData = await fetchPropertyDetails(propertyId);
+    const propertyData = {
+      propertyId: body.id || 'N/A',
+      propertyType: body.propertyType || 'Property',
+      price: Number(body.price) || 0,
+      sqft: Number(body.sqft) || 0,
+      lotSize: body.lotSize || 'N/A',
+      yearBuilt: body.yearBuilt || 'N/A',
+      address: body.address || 'N/A',
+      description: body.description || 'No description available',
+      propertyDetails: body.propertyDetails || {}
+    };
+
+    console.log('Formatted property data:', propertyData);
+
+    const message = `Please analyze this ${propertyData.propertyType} property:
+
+Property Details:
+- Address: ${propertyData.address}
+- Type: ${propertyData.propertyType}
+- Price: $${propertyData.price.toLocaleString()}
+- Square Footage: ${propertyData.sqft.toLocaleString()} sq ft
+- Lot Size: ${propertyData.lotSize}
+- Year Built: ${propertyData.yearBuilt}
+- Bedrooms: ${propertyData.propertyDetails.bedrooms || 'N/A'}
+- Bathrooms: ${propertyData.propertyDetails.bathrooms || 'N/A'}
+- Parking: ${propertyData.propertyDetails.parking || 'N/A'}
+- Construction: ${propertyData.propertyDetails.construction || 'N/A'}
+- Zoning: ${propertyData.propertyDetails.zoning || 'N/A'}
+
+Property Description:
+${propertyData.description}
+
+Please provide:
+1. Market Analysis
+   - Current market conditions
+   - Price comparison with similar properties
+   - Location value factors
+
+2. Investment Potential
+   - Potential return on investment
+   - Rental income potential (if applicable)
+   - Value appreciation outlook
+   ${propertyData.propertyType.toLowerCase() === 'commercial' ? '- Estimated cap rate analysis' : ''}
+
+3. Property Assessment
+   - Condition analysis based on age and features
+   - Key advantages and unique selling points
+   - Potential renovation or improvement needs
+
+4. Risk Factors
+   - Market-specific risks
+   - Property-specific concerns
+   - Economic considerations
+
+5. Overall Recommendation
+   - Buy/Hold/Pass recommendation
+   - Key decision factors
+   - Additional considerations
+
+Please keep the analysis concise and focused on the most relevant factors for this type of property.`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-sonnet-20240229',
+      max_tokens: 1500,
+      messages: [{
+        role: 'user',
+        content: message,
+      }],
+    });
+
+    const firstContent = response.content[0];
     
-    // Analyze with Claude
-    const analysis = await analyzeWithClaude(propertyData);
+    if (firstContent.type === 'text') {
+      return NextResponse.json({ analysis: firstContent.text });
+    }
 
-    return NextResponse.json({ propertyData, analysis });
+    throw new Error('Unexpected response format from Claude');
   } catch (error) {
     console.error('Error in analyze:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to analyze property';
     return NextResponse.json(
-      { error: errorMessage },
+      { error: error instanceof Error ? error.message : 'Failed to analyze property' },
       { status: 500 }
     );
   }
-}
-
-async function fetchPropertyDetails(propertyId: string): Promise<PropertyData> {
-  const options = {
-    method: 'GET',
-    url: `https://loopnet.p.rapidapi.com/properties/${propertyId}`,
-    headers: {
-      'X-RapidAPI-Key': process.env.RAPID_API_KEY,
-      'X-RapidAPI-Host': 'loopnet.p.rapidapi.com'
-    }
-  };
-
-  const response = await axios.request<LoopNetPropertyDetail>(options);
-  console.log('Property details response:', response.data);
-  
-  return {
-    price: response.data.price?.amount || 0,
-    beds: response.data.building?.units?.totalUnits || 0,
-    baths: response.data.building?.bathrooms || 0,
-    sqft: response.data.building?.size?.amount || 0,
-    address: `${response.data.address.streetAddress}, ${response.data.address.city}, ${response.data.address.state}`,
-  };
-}
-
-async function analyzeWithClaude(propertyData: PropertyData): Promise<string> {
-  const message = `Please analyze this commercial real estate investment opportunity:
-  
-Property Details:
-- Price: $${propertyData.price.toLocaleString()}
-- Total Units: ${propertyData.beds}
-- Bathrooms: ${propertyData.baths}
-- Square Feet: ${propertyData.sqft.toLocaleString()}
-- Location: ${propertyData.address}
-
-Please provide:
-1. A brief investment analysis
-2. Estimated cap rate and cash on cash return
-3. Potential risks and opportunities
-4. Overall recommendation
-
-Keep the response concise and focused on key commercial real estate investment factors.`;
-
-  const response = await anthropic.messages.create({
-    model: 'claude-3-sonnet-20240229',
-    max_tokens: 1000,
-    messages: [{
-      role: 'user',
-      content: message,
-    }],
-  });
-
-  const firstContent = response.content[0];
-  
-  if (firstContent.type === 'text') {
-    return firstContent.text;
-  }
-
-  throw new Error('Unexpected response format from Claude');
 }
