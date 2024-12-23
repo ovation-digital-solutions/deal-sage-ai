@@ -17,7 +17,7 @@ export default function AnalyzePage() {
       {/* Main Content */}
       <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
         <div className="max-w-3xl mx-auto">
-          <AnalyzeForm />
+          <AnalyzeForm onSearch={() => {}} />
         </div>
       </div>
     </div>

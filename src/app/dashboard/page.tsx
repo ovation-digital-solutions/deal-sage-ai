@@ -6,7 +6,9 @@ import { Property } from '@/types/property';
 
 export default function Dashboard() {
   const [savedProperties, setSavedProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [searchResults, setSearchResults] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     const fetchSavedProperties = async () => {
@@ -17,12 +19,36 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Error fetching saved properties:', error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchSavedProperties();
   }, []);
+
+  const handleSearch = async (city: string, state: string) => {
+    setSearchLoading(true);
+    try {
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ city, state })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setSearchResults(data.properties || []);
+    } catch (error) {
+      console.error('Error searching properties:', error);
+      setSearchResults([]); // Clear results on error
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -36,63 +62,8 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left Column - Analyze Form */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-4">
-            Analyze a New Deal
-          </h2>
-          <div className="max-w-2xl">
-            <AnalyzeForm />
-          </div>
-        </div>
-
-        {/* Right Column - Saved Properties */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold">
-              Recently Saved Properties
-            </h2>
-            {savedProperties.length > 0 && (
-              <a
-                href="/dashboard/saved"
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                View All →
-              </a>
-            )}
-          </div>
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <p className="mt-4 text-sm text-gray-600">Loading properties...</p>
-            </div>
-          ) : savedProperties.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-              <div className="rounded-full bg-gray-100 p-3 mb-4">
-                <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-              </div>
-              <p className="text-gray-600 font-medium">No saved properties yet</p>
-              <p className="mt-1 text-sm text-gray-500">
-                Properties you save will appear here
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {savedProperties.slice(0, 3).map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mt-6 lg:mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
           <div className="flex items-center">
             <div className="rounded-full bg-blue-100 p-2 mr-4">
@@ -102,7 +73,11 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Total Properties</p>
-              <p className="text-2xl font-bold text-gray-900">{savedProperties.length}</p>
+              {isLoading ? (
+                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded mt-1"></div>
+              ) : (
+                <p className="text-2xl font-bold text-gray-900">{savedProperties.length}</p>
+              )}
             </div>
           </div>
         </div>
@@ -149,6 +124,56 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+        {/* Left Column - Analyze Form */}
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4">
+            Analyze a New Deal
+          </h2>
+          <div className="max-w-2xl">
+            <AnalyzeForm onSearch={handleSearch} />
+          </div>
+        </div>
+
+        {/* Right Column - Search Results */}
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 lg:p-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              {isLoading ? 'Loading...' : searchLoading ? 'Searching...' : 'Search Results'}
+            </h2>
+          </div>
+          
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <p className="mt-4 text-sm text-gray-600">Loading...</p>
+            </div>
+          ) : searchLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <p className="mt-4 text-sm text-gray-600">Searching properties...</p>
+            </div>
+          ) : searchResults.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No properties found</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Try searching with different criteria
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {searchResults.map((property, index) => (
+                <PropertyCard 
+                  key={`${property.id || index}-${index}`}
+                  property={property} 
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
-} 
+}

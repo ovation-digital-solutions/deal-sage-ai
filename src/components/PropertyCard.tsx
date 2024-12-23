@@ -6,7 +6,7 @@ interface PropertyCardProps {
   property: Property;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+export function PropertyCard({ property }: PropertyCardProps) {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -72,8 +72,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
   };
 
+  const cardId = property.id || `property-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div key={cardId} className="bg-white rounded-lg shadow-lg p-6 mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800">{property.address}</h2>
         <button
@@ -198,7 +200,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       </div>
     </div>
   );
-};
+}
 
 const MetricBox: React.FC<{ label: string; value: string | null | undefined }> = ({ label, value }) => (
   <div className="bg-gray-50 p-3 rounded">
