@@ -10,6 +10,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -47,19 +48,45 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      const response = await fetch('/api/properties/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          propertyId: property.id,
+          propertyData: property
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save property');
+      }
+
+      setIsSaved(true);
+    } catch (error) {
+      console.error('Save error:', error);
+      alert('Failed to save property. Please try again.');
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-      {/* Header Section */}
-      <div className="border-b pb-4 mb-4">
+      <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-gray-800">{property.address}</h2>
-        <div className="flex flex-wrap gap-4 mt-2">
-          <span className="text-xl font-semibold text-green-600">
-            ${property.price.toLocaleString()}
-          </span>
-          <span className="text-gray-600">
-            {property.propertyType} | {property.sqft.toLocaleString()} SF
-          </span>
-        </div>
+        <button
+          onClick={handleSave}
+          disabled={isSaved}
+          className={`px-4 py-2 rounded-full ${
+            isSaved 
+              ? 'bg-green-500 text-white cursor-default'
+              : 'bg-blue-500 text-white hover:bg-blue-600'
+          }`}
+        >
+          {isSaved ? 'Saved' : 'Save Property'}
+        </button>
       </div>
 
       {/* Key Metrics */}
