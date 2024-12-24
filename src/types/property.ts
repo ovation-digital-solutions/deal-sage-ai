@@ -1,35 +1,23 @@
 export interface PropertyDetails {
-  propertySubType?: string;
-  beds?: number;
-  baths?: number;
+  bedrooms: number;
+  bathrooms: number;
   parking?: string;
-  floors?: number;
-  zoning?: string;
-  tenancy?: string;
-  occupancy?: string;
   construction?: string;
-  utilities?: string;
-  clearHeight?: string;
-  lastSoldDate?: string;
-  listDate?: string;
-  estimatedValue?: string;
+  zoning?: string;
 }
 
 export interface Property {
   id: string;
   address: string;
-  price: number;
-  propertyType: string;
-  sqft: number;
-  yearBuilt?: number;
-  lotSize?: string;
-  description?: string;
-  highlights?: string[];
-  propertyDetails?: PropertyDetails;
   city: string;
   state: string;
-  pricePerSqFt?: number;
-  capRate?: string;
+  price?: number;
+  sqft?: number;
+  lotSize?: string;
+  yearBuilt?: string;
+  propertyType?: string;
+  description?: string;
+  propertyDetails?: PropertyDetails;
 }
 
 export interface ApiError {

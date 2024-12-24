@@ -1,9 +1,12 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { setIsAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,8 +30,11 @@ export default function Login() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+      setIsAuthenticated(true);
+      
+      // Get the return URL from the query parameters or default to dashboard
+      const returnUrl = searchParams.get('returnUrl') || '/dashboard';
+      router.push(returnUrl);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     }
