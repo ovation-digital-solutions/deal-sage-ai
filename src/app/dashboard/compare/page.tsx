@@ -52,14 +52,21 @@ export default function ComparePage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ propertyId: property.id, propertyData: property }),
+        body: JSON.stringify({
+          ...property,
+          id: property.id || property.address
+        })
       });
 
-      if (!response.ok) throw new Error('Failed to save property');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save property');
+      }
+      
       toast.success(`${property.address} saved to favorites!`);
     } catch (error) {
       console.error('Error saving to favorites:', error);
-      toast.error('Failed to save property to favorites');
+      toast.error('Failed to save to favorites');
     } finally {
       setSavingProperty(null);
     }
