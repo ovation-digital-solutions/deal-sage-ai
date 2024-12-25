@@ -1,4 +1,4 @@
-'use client';
+
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from '@/contexts/AuthContext';
 import Navigation from '@/components/Navigation';
@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const metadata = {
+  title: 'Meridian Ai',
+  description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,6 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <title>{metadata.title}</title>
+        <meta name="description" content={metadata.description} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <Navigation />

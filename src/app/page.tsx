@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center">
-        <h1 className="text-4xl font-bold text-center">Deal Sage AI</h1>
+        <h1 className="text-4xl font-bold text-center">Meridian AI</h1>
         <p className="text-xl text-center max-w-2xl">
           Your intelligent assistant for analyzing deals and making smart recommendations
         </p>
@@ -25,7 +25,7 @@ export default function Home() {
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center text-sm">
-        <p>© 2024 Deal Sage AI. All rights reserved.</p>
+        <p>© 2024 Meridian AI. All rights reserved.</p>
       </footer>
     </div>
   );

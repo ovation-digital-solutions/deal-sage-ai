@@ -131,13 +131,98 @@ interface MergedPropertyData {
 export class PropertyService {
   private readonly rapidApiKey: string;
   private readonly rapidApiHost: string;
+  private readonly stateCodeMap: { [key: string]: string } = {
+    'ALABAMA': 'AL',
+    'ALASKA': 'AK',
+    'ARIZONA': 'AZ',
+    'ARKANSAS': 'AR',
+    'CALIFORNIA': 'CA',
+    'COLORADO': 'CO',
+    'CONNECTICUT': 'CT',
+    'DELAWARE': 'DE',
+    'FLORIDA': 'FL',
+    'GEORGIA': 'GA',
+    'HAWAII': 'HI',
+    'IDAHO': 'ID',
+    'ILLINOIS': 'IL',
+    'INDIANA': 'IN',
+    'IOWA': 'IA',
+    'KANSAS': 'KS',
+    'KENTUCKY': 'KY',
+    'LOUISIANA': 'LA',
+    'MAINE': 'ME',
+    'MARYLAND': 'MD',
+    'MASSACHUSETTS': 'MA',
+    'MICHIGAN': 'MI',
+    'MINNESOTA': 'MN',
+    'MISSISSIPPI': 'MS',
+    'MISSOURI': 'MO',
+    'MONTANA': 'MT',
+    'NEBRASKA': 'NE',
+    'NEVADA': 'NV',
+    'NEW HAMPSHIRE': 'NH',
+    'NEW JERSEY': 'NJ',
+    'NEW MEXICO': 'NM',
+    'NEW YORK': 'NY',
+    'NORTH CAROLINA': 'NC',
+    'NORTH DAKOTA': 'ND',
+    'OHIO': 'OH',
+    'OKLAHOMA': 'OK',
+    'OREGON': 'OR',
+    'PENNSYLVANIA': 'PA',
+    'RHODE ISLAND': 'RI',
+    'SOUTH CAROLINA': 'SC',
+    'SOUTH DAKOTA': 'SD',
+    'TENNESSEE': 'TN',
+    'TEXAS': 'TX',
+    'UTAH': 'UT',
+    'VERMONT': 'VT',
+    'VIRGINIA': 'VA',
+    'WASHINGTON': 'WA',
+    'WEST VIRGINIA': 'WV',
+    'WISCONSIN': 'WI',
+    'WYOMING': 'WY'
+  };
 
   constructor() {
     this.rapidApiKey = process.env.RAPID_API_KEY || '';
     this.rapidApiHost = 'realty-in-us.p.rapidapi.com';
   }
 
+  private getStateCode(state: string): string {
+    console.log('Getting state code for:', state); // Debug log
+
+    // Handle empty or null input
+    if (!state) {
+      throw new Error('State is required');
+    }
+
+    // Clean the input: trim whitespace and convert to uppercase
+    const cleanState = state.trim().toUpperCase();
+    console.log('Cleaned state input:', cleanState); // Debug log
+
+    // If it's already a valid 2-letter code, return it
+    if (/^[A-Z]{2}$/.test(cleanState)) {
+      console.log('Valid state code provided:', cleanState);
+      return cleanState;
+    }
+
+    // Try to find the state code from the full name
+    const stateCode = this.stateCodeMap[cleanState];
+    console.log('Looked up state code:', stateCode); // Debug log
+
+    if (!stateCode) {
+      console.log('Available state mappings:', Object.keys(this.stateCodeMap)); // Debug log
+      throw new Error(`Invalid state: ${state}. Please use a valid two-letter state code or full state name.`);
+    }
+
+    return stateCode;
+  }
+
   private async getRealtyData(city: string, state: string): Promise<PropertySearchResponse> {
+    const stateCode = this.getStateCode(state);
+    console.log(`Converting state "${state}" to state code: ${stateCode}`);
+
     const options = {
       method: 'POST',
       url: `https://${this.rapidApiHost}/properties/v3/list`,
@@ -150,7 +235,7 @@ export class PropertyService {
         limit: 4,
         offset: 0,
         city: city,
-        state_code: state,
+        state_code: stateCode,
         status: ['for_sale'],
         sort: {
           direction: 'desc',
@@ -188,18 +273,36 @@ export class PropertyService {
 
   async searchProperties(city: string, state: string) {
     try {
+      console.log('Starting property search for:', { city, state });
+      console.log('Using API Key:', this.rapidApiKey ? 'Present' : 'Missing');
+      
       const initialProperties = await this.getRealtyData(city, state);
+      console.log('Initial properties response:', initialProperties);
+      
+      if (!initialProperties?.data?.home_search?.results?.length) {
+        console.log('No properties found in search results');
+        return [];
+      }
       
       const enrichedProperties = await Promise.all(
         initialProperties.data.home_search.results.map(async (property: BasicProperty) => {
+          console.log('Fetching details for property:', property.property_id);
           const details = await this.getPropertyDetails(property.property_id);
           return this.mergePropertyData(property, details);
         })
       );
 
+      console.log('Returning enriched properties:', enrichedProperties.length);
       return enrichedProperties;
     } catch (error) {
-      console.error('Error fetching property data:', error);
+      console.error('Error in searchProperties:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('API Error Details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
       throw error;
     }
   }

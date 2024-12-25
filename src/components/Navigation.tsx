@@ -22,7 +22,7 @@ export default function Navigation() {
               href="/" 
               className="text-xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
             >
-              Deal Sage AI
+              Meridian AI
             </Link>
           </div>
 
