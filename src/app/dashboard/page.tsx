@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-hot-toast';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { toast } from 'react-hot-toast';
 
 interface DashboardStats {
   totalProperties: number;
@@ -33,28 +35,39 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch('/api/dashboard');
-        if (!response.ok) throw new Error('Failed to fetch dashboard data');
-        const data = await response.json();
-        setDashboardData(data);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Redirect if not authenticated
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+      return;
+    }
 
-    fetchDashboardData();
-  }, []);
+    // Only fetch data if authenticated
+    if (isAuthenticated) {
+      const fetchDashboardData = async () => {
+        try {
+          const response = await fetch('/api/dashboard');
+          if (!response.ok) throw new Error('Failed to fetch dashboard data');
+          const data = await response.json();
+          setDashboardData(data);
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+          toast.error('Failed to load dashboard data');
+        } finally {
+          setIsLoadingData(false);
+        }
+      };
 
-  if (isLoading) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading || isLoadingData) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import pool from '../../../../lib/db';
 
+import pool from '../../../../lib/db';
 
 export async function POST(req: Request) {
   try {
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create the response
+    // Create the response object
     const response = NextResponse.json({
       user: {
         id: user.id,
@@ -39,14 +39,17 @@ export async function POST(req: Request) {
       }
     });
 
-    // Set authentication cookie on the response
-    response.cookies.set('token', user.id.toString(), {
+    // Set the cookie in the response
+    response.cookies.set({
+      name: 'token',
+      value: user.id.toString(),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7 // 1 week
     });
 
+    console.log('Login - Setting cookie with token:', user.id.toString());
     return response;
 
   } catch (err) {

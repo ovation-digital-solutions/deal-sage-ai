@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function Login() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setIsAuthenticated } = useAuth();
+  const { setIsAuthenticated, setUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -31,6 +31,9 @@ export default function Login() {
       }
 
       setIsAuthenticated(true);
+      setUser(data.user);
+      
+      console.log('Login successful:', { user: data.user });
       
       // Get the return URL from the query parameters or default to dashboard
       const returnUrl = searchParams.get('returnUrl') || '/dashboard';

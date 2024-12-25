@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import pool from '../../../lib/db';
 
 interface DashboardStats {
@@ -23,7 +24,18 @@ interface ActivityItem {
 
 export async function GET() {
   try {
-    const userId = 1; // TODO: Get from session
+    // Get user ID from token cookie
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = parseInt(token); // The token contains the user ID
 
     // Get basic stats
     const statsResult = await pool.query(`
@@ -69,7 +81,7 @@ export async function GET() {
     const stats: DashboardStats = {
       totalProperties: parseInt(statsResult.rows[0].saved_deals) || 0,
       analysesRun: parseInt(statsResult.rows[0].analyses_run) || 0,
-      marketUpdates: 8, // TODO: Implement market updates tracking
+      marketUpdates: 8,
       savedDeals: parseInt(statsResult.rows[0].saved_deals) || 0
     };
 
