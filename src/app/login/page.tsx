@@ -1,10 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
-export default function Login() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setIsAuthenticated, setUser } = useAuth();
@@ -42,6 +42,66 @@ export default function Login() {
   };
 
   return (
+    <form className="space-y-6" onSubmit={handleSubmit}>
+      {error && (
+        <div className="text-red-400 text-center text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
+            Email address
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          />
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        className="w-full px-4 py-3 text-sm font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+      >
+        Sign in
+      </button>
+
+      <p className="text-center text-sm text-slate-400">
+        Don&apos;t have an account?{' '}
+        <Link href="/register" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+          Sign up
+        </Link>
+      </p>
+    </form>
+  );
+}
+
+export default function Login() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       {/* Background Pattern */}
       <div className="absolute inset-0 z-0 opacity-10">
@@ -66,61 +126,13 @@ export default function Login() {
             Sign in to your account
           </h2>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="text-red-400 text-center text-sm">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1">
-                  Email address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-transparent transition-all"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
-              </div>
+          <Suspense fallback={
+            <div className="text-center text-slate-400">
+              Loading...
             </div>
-
-            <button
-              type="submit"
-              className="w-full px-4 py-3 text-sm font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
-            >
-              Sign in
-            </button>
-
-            <p className="text-center text-sm text-slate-400">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-                Sign up
-              </Link>
-            </p>
-          </form>
+          }>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>
