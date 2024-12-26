@@ -8,6 +8,8 @@ const anthropic = new Anthropic({
 
 export async function POST(req: Request) {
   try {
+    console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+    
     if (!req.body) {
       return NextResponse.json(
         { error: 'Request body is required' },
