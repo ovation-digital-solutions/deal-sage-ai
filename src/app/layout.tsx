@@ -1,7 +1,6 @@
-
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from '@/contexts/AuthContext';
-import Navigation from '@/components/Navigation';
+import Navigation from '@/components/navigation/Navigation';
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 
@@ -33,8 +32,13 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
-          <Navigation />
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <Navigation />
+            <main className="flex-grow">
+              {children}
+            </main>
+            
+          </div>
           <Toaster position="bottom-right" />
         </AuthProvider>
       </body>
