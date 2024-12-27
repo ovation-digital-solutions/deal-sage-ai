@@ -1,34 +1,9 @@
 'use client';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+
 import { IconHome, IconSearch, IconCompare, IconStar } from '@/components/Icons';
 import { useState } from 'react';
-
-function SideNavLink({ href, icon, children, collapsed }: { 
-  href: string; 
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  collapsed?: boolean;
-}) {
-  const pathname = usePathname();
-  const isActive = pathname === href;
-
-  return (
-    <Link
-      href={href}
-      className={`
-        flex items-center gap-3 px-2 xs:px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors
-        ${isActive 
-          ? 'bg-black text-white' 
-          : 'text-gray-600 hover:bg-gray-100'
-        }
-      `}
-    >
-      {icon}
-      {!collapsed && <span className="font-medium hidden xs:inline">{children}</span>}
-    </Link>
-  );
-}
+import { DesktopSideNavLink } from '@/components/navigation/DesktopSideNavLink';
+import { MobileSideNavLink } from '@/components/navigation/MobileSideNavLink';
 
 export default function DashboardLayout({
   children,
@@ -46,23 +21,51 @@ export default function DashboardLayout({
       `}>
         <button 
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="w-full p-2 mb-2 text-gray-600 hover:bg-gray-100 rounded-lg block xs:hidden"
+          className="hidden xs:flex w-8 h-8 mb-2 text-gray-600 hover:bg-gray-100 rounded-lg items-center justify-center"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          ☰
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
         </button>
 
-        <SideNavLink href="/dashboard" icon={<IconHome className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
+        {/* Desktop Navigation Links */}
+        <DesktopSideNavLink href="/dashboard" icon={<IconHome className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
           Overview
-        </SideNavLink>
-        <SideNavLink href="/dashboard/browse" icon={<IconSearch className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
+        </DesktopSideNavLink>
+        <DesktopSideNavLink href="/dashboard/browse" icon={<IconSearch className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
           Browse Properties
-        </SideNavLink>
-        <SideNavLink href="/dashboard/compare" icon={<IconCompare className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
+        </DesktopSideNavLink>
+        <DesktopSideNavLink href="/dashboard/compare" icon={<IconCompare className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
           Save & Compare
-        </SideNavLink>
-        <SideNavLink href="/dashboard/favorites" icon={<IconStar className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
+        </DesktopSideNavLink>
+        <DesktopSideNavLink href="/dashboard/favorites" icon={<IconStar className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
           Favorites
-        </SideNavLink>
+        </DesktopSideNavLink>
+
+        {/* Mobile Navigation Links */}
+        <MobileSideNavLink href="/dashboard" icon={<IconHome className="w-4 xs:w-5 h-4 xs:h-5" />}>
+          Overview
+        </MobileSideNavLink>
+        <MobileSideNavLink href="/dashboard/browse" icon={<IconSearch className="w-4 xs:w-5 h-4 xs:h-5" />}>
+          Browse Properties
+        </MobileSideNavLink>
+        <MobileSideNavLink href="/dashboard/compare" icon={<IconCompare className="w-4 xs:w-5 h-4 xs:h-5" />}>
+          Save & Compare
+        </MobileSideNavLink>
+        <MobileSideNavLink href="/dashboard/favorites" icon={<IconStar className="w-4 xs:w-5 h-4 xs:h-5" />}>
+          Favorites
+        </MobileSideNavLink>
       </aside>
 
       {/* Main Content */}

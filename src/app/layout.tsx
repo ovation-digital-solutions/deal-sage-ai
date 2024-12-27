@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'Meridian Ai',
+  title: 'MERIDEX AI',
   description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
 };
 
