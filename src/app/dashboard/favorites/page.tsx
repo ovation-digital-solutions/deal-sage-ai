@@ -3,16 +3,26 @@ import { useState, useEffect } from 'react';
 import { Property } from '@/types/property';
 import { PropertyCard } from '@/components/PropertyCard';
 import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
         const response = await fetch('/api/properties/favorite');
+        
+        if (response.status === 401) {
+          // Unauthorized - redirect to login
+          router.push('/login');
+          return;
+        }
+        
         if (!response.ok) throw new Error('Failed to fetch favorites');
+        
         const data = await response.json();
         setFavorites(data.properties || []);
       } catch (error) {
@@ -24,7 +34,7 @@ export default function FavoritesPage() {
     };
 
     fetchFavorites();
-  }, []);
+  }, [router]);
 
   const handleRemoveFavorite = async (propertyId: string) => {
     try {

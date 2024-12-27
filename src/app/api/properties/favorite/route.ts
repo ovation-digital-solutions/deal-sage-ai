@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server';
 import pool from '../../../../lib/db';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
-    const userId = 1; // TODO: Get from session
+    // Get user ID from token
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = parseInt(token);
 
     const result = await pool.query(
       'SELECT property_data FROM favorite_properties WHERE user_id = $1 ORDER BY created_at DESC',
@@ -25,7 +37,18 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const userId = 1;
+    // Get user ID from token
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = parseInt(token);
     const propertyData = await req.json();
     
     console.log('Received property data:', propertyData); // Debug log
@@ -66,9 +89,20 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    // Get user ID from token
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const userId = parseInt(token);
     const url = new URL(req.url);
     const propertyId = url.pathname.split('/').pop();
-    const userId = 1; // TODO: Get from session
 
     await pool.query(
       'DELETE FROM favorite_properties WHERE user_id = $1 AND property_id = $2',
