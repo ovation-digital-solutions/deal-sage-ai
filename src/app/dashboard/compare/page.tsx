@@ -20,6 +20,19 @@ export default function ComparePage() {
     loadSelectedProperties();
   }, []);
 
+  const handleDelete = async (propertyId: string) => {
+    const updatedProperties = selectedProperties.filter(p => p.id !== propertyId);
+    setSelectedProperties(updatedProperties);
+    // Update localStorage
+    localStorage.setItem('selectedProperties', JSON.stringify(updatedProperties));
+    toast.success('Property removed from comparison');
+    
+    // Clear comparison if less than 2 properties
+    if (updatedProperties.length < 2) {
+      setComparison('');
+    }
+  };
+
   const handleCompare = async () => {
     if (selectedProperties.length < 2) return;
     setIsAnalyzing(true);
@@ -72,6 +85,13 @@ export default function ComparePage() {
     }
   };
 
+  const handleClearAll = () => {
+    setSelectedProperties([]);
+    localStorage.removeItem('selectedProperties');
+    setComparison('');
+    toast.success('All properties cleared from comparison');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
       {/* Header Section */}
@@ -82,34 +102,48 @@ export default function ComparePage() {
             Select multiple properties to compare their features
           </p>
         </div>
-        <button
-          onClick={handleCompare}
-          disabled={selectedProperties.length < 2 || isAnalyzing}
-          className={`
-            inline-flex items-center justify-center
-            px-6 py-2.5 rounded-lg text-white text-sm font-medium
-            shadow-sm transition-all duration-200 ease-in-out
-            ${selectedProperties.length < 2 || isAnalyzing
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-black hover:bg-gray-800 hover:shadow-md active:transform active:scale-[0.98]'
-            }
-          `}
-        >
-          {isAnalyzing ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-              </svg>
-              Analyzing...
-            </>
-          ) : (
-            <>
-              Compare {selectedProperties.length} Properties
-              {selectedProperties.length < 2 && <span className="ml-2 text-xs opacity-75">(Select at least 2)</span>}
-            </>
+        <div className="flex flex-col xs:flex-row gap-3">
+          {selectedProperties.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="inline-flex items-center justify-center
+                px-6 py-2.5 rounded-lg text-gray-700 text-sm font-medium
+                border border-gray-300 bg-white
+                hover:bg-gray-50 hover:shadow-sm
+                transition-all duration-200 ease-in-out"
+            >
+              Clear All
+            </button>
           )}
-        </button>
+          <button
+            onClick={handleCompare}
+            disabled={selectedProperties.length < 2 || isAnalyzing}
+            className={`
+              inline-flex items-center justify-center
+              px-6 py-2.5 rounded-lg text-white text-sm font-medium
+              shadow-sm transition-all duration-200 ease-in-out
+              ${selectedProperties.length < 2 || isAnalyzing
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-black hover:bg-gray-800 hover:shadow-md active:transform active:scale-[0.98]'
+              }
+            `}
+          >
+            {isAnalyzing ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                </svg>
+                Analyzing...
+              </>
+            ) : (
+              <>
+                Compare {selectedProperties.length} Properties
+                {selectedProperties.length < 2 && <span className="ml-2 text-xs opacity-75">(Select at least 2)</span>}
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Selected Properties Grid */}
@@ -118,6 +152,8 @@ export default function ComparePage() {
           <PropertyCard
             key={property.id}
             property={property}
+            onDelete={handleDelete}
+            showDeleteButton={true}
           />
         ))}
       </div>
