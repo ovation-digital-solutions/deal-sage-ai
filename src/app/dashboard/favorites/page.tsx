@@ -36,19 +36,27 @@ export default function FavoritesPage() {
     fetchFavorites();
   }, [router]);
 
-  const handleRemoveFavorite = async (propertyId: string) => {
+  const handleDelete = async (propertyId: string) => {
     try {
-      const response = await fetch(`/api/properties/favorite/${propertyId}`, {
+      const response = await fetch(`/api/properties/favorite?id=${propertyId}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
-      if (!response.ok) throw new Error('Failed to remove from favorites');
-      
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete property');
+      }
+
       setFavorites(prev => prev.filter(p => p.id !== propertyId));
       toast.success('Property removed from favorites');
     } catch (error) {
-      console.error('Error removing favorite:', error);
-      toast.error('Failed to remove from favorites');
+      console.error('Error deleting property:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete property');
+      throw error;
     }
   };
 
@@ -71,28 +79,12 @@ export default function FavoritesPage() {
       ) : (
         <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
           {favorites.map(property => (
-            <div key={property.id} className="relative">
-              <PropertyCard property={property} />
-              <button
-                onClick={() => handleRemoveFavorite(property.id)}
-                className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow hover:bg-red-50 transition-colors z-10"
-                title="Remove from favorites"
-              >
-                <svg 
-                  className="w-3.5 h-3.5 text-red-500" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M6 18L18 6M6 6l12 12" 
-                  />
-                </svg>
-              </button>
-            </div>
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onDelete={handleDelete}
+              showDeleteButton
+            />
           ))}
         </div>
       )}

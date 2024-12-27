@@ -87,9 +87,18 @@ export async function POST(req: Request) {
   }
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(request: Request) {
   try {
-    // Get user ID from token
+    // Get propertyId from URL
+    const url = new URL(request.url);
+    const propertyId = url.searchParams.get('id');
+
+    if (!propertyId) {
+      return NextResponse.json(
+        { error: 'Property ID is required' },
+        { status: 400 }
+      );
+    }
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
@@ -101,13 +110,18 @@ export async function DELETE(req: Request) {
     }
 
     const userId = parseInt(token);
-    const url = new URL(req.url);
-    const propertyId = url.pathname.split('/').pop();
 
-    await pool.query(
-      'DELETE FROM favorite_properties WHERE user_id = $1 AND property_id = $2',
+    const result = await pool.query(
+      'DELETE FROM favorite_properties WHERE user_id = $1 AND property_id = $2 RETURNING *',
       [userId, propertyId]
     );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json(
+        { error: 'Property not found in favorites' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
