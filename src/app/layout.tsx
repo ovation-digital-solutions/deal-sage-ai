@@ -17,6 +17,22 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: 'MERIDEX AI',
   description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
+  openGraph: {
+    title: 'MERIDEX AI',
+    description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
+    images: [{
+      url: '/textPreview.png',
+      width: 1200,  // adjust these dimensions to match your actual image
+      height: 630,  // adjust these dimensions to match your actual image
+      alt: 'MERIDEX AI Preview',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MERIDEX AI',
+    description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
+    images: ['/textPreview.png'],
+  },
 };
 
 export default function RootLayout({
