@@ -60,8 +60,8 @@ const Hero = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-white">Find</h3>
-              <p className="text-sm sm:text-base text-slate-300">Find property data to accelerate your process</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Property Search</h3>
+              <p className="text-sm sm:text-base text-slate-300 text-center">Instantly search and analyze properties with comprehensive data on pricing, history, and market trends</p>
             </div>
             <div className="flex flex-col items-center space-y-2 sm:space-y-3 p-4 sm:p-6 lg:p-8 rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group">
               <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
@@ -69,8 +69,8 @@ const Hero = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-white">Compare</h3>
-              <p className="text-sm sm:text-base text-slate-300">Compare property data to accelerate your process</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Market Analysis</h3>
+              <p className="text-sm sm:text-base text-slate-300 text-center">Compare properties side-by-side with AI-powered insights on ROI potential and market opportunities</p>
             </div>
             <div className="flex flex-col items-center space-y-2 sm:space-y-3 p-4 sm:p-6 lg:p-8 rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 hover:border-emerald-500/50 transition-colors group sm:col-span-2 lg:col-span-1">
               <div className="p-2 sm:p-3 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
@@ -78,8 +78,8 @@ const Hero = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-white">Chat</h3>
-              <p className="text-sm sm:text-base text-slate-300">Chat with property data to accelerate your process</p>
+              <h3 className="text-lg sm:text-xl font-semibold text-white">AI Assistant</h3>
+              <p className="text-sm sm:text-base text-slate-300 text-center">Get instant answers about properties, and investment strategies from our intelligent analysis system</p>
             </div>
           </div>
         </div>

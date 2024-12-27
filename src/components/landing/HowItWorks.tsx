@@ -14,7 +14,7 @@ const HowItWorksSection = () => {
       features: [
         "Property search",
         "Market data access",
-        "Due diligence tools"
+        "Detailed property listings"
       ]
     },
     {

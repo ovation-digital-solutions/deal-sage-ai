@@ -19,12 +19,15 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Left side - Brand */}
           <div className="flex-shrink-0">
-            <Link 
-              href="/" 
-              className="text-xl font-bold bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
-            >
-              Meridex AI
-            </Link>
+            <div className="flex flex-col items-center space-y-1">
+              <Link 
+                href="/" 
+                className="text-xl font-bold bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+              >
+                MERIDEX AI
+              </Link>
+              <div className="h-1 w-16 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full" />
+            </div>
           </div>
 
           {/* Desktop Navigation */}
