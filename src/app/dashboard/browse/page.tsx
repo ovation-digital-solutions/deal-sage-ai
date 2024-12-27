@@ -56,38 +56,71 @@ export default function BrowsePage() {
   return (
     <div className="relative min-h-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-        <h1 className="text-xl xs:text-2xl font-bold mb-4 xs:mb-6">Browse Properties</h1>
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-xl xs:text-2xl font-bold text-gray-900">Browse Properties</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Search and compare properties in your desired location
+            </p>
+          </div>
+          <button
+            onClick={handleCompare}
+            disabled={selectedProperties.length < 2}
+            className={`
+              inline-flex items-center justify-center
+              px-6 py-2.5 rounded-lg text-white text-sm font-medium
+              shadow-sm transition-all duration-200 ease-in-out
+              ${selectedProperties.length < 2
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-black hover:bg-gray-800 hover:shadow-md active:transform active:scale-[0.98]'
+              }
+            `}
+          >
+            Compare {selectedProperties.length} Properties
+            {selectedProperties.length < 2 && <span className="ml-2 text-xs opacity-75">(Select at least 2)</span>}
+          </button>
+        </div>
         
         {/* Search Form */}
-        <form onSubmit={handleSearch} className="mb-6 xs:mb-8 space-y-3 xs:space-y-4">
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
+        <form onSubmit={handleSearch} className="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700">City</label>
+              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">City</label>
               <input
                 type="text"
                 id="city"
                 value={searchForm.city}
                 onChange={(e) => setSearchForm(prev => ({ ...prev, city: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black text-sm xs:text-base"
+                className="block w-full h-12 px-4 rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black text-base"
+                placeholder="Enter city name"
               />
             </div>
             <div>
-              <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">State</label>
               <input
                 type="text"
                 id="state"
                 value={searchForm.state}
                 onChange={(e) => setSearchForm(prev => ({ ...prev, state: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black text-sm xs:text-base"
+                className="block w-full h-12 px-4 rounded-lg border-gray-300 shadow-sm focus:border-black focus:ring-black text-base"
+                placeholder="Enter state"
               />
             </div>
           </div>
-          <button
-            type="submit"
-            className="w-full xs:w-auto px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 text-sm xs:text-base transition-colors"
-          >
-            Search Properties
-          </button>
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center px-8 py-3 rounded-lg text-white text-base font-medium
+                bg-black hover:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200 ease-in-out
+                active:transform active:scale-[0.98]"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search Properties
+            </button>
+          </div>
         </form>
 
         {/* Results Grid */}
