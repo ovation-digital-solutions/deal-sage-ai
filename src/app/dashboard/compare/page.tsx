@@ -73,17 +73,18 @@ export default function ComparePage() {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Compare Properties</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
+      <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 xs:gap-0">
+        <h1 className="text-xl xs:text-2xl font-bold">Compare Properties</h1>
         <button
           onClick={handleCompare}
           disabled={selectedProperties.length < 2 || isAnalyzing}
           className={`
-            px-4 py-2 rounded-lg text-white
+            w-full xs:w-auto px-4 py-2 xs:py-2.5 rounded-lg text-white text-sm xs:text-base
+            transition-all duration-200 ease-in-out
             ${selectedProperties.length < 2 || isAnalyzing
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-black hover:bg-gray-800'
+              : 'bg-black hover:bg-gray-800 xs:hover:shadow-md xs:hover:transform xs:hover:-translate-y-0.5'
             }
           `}
         >
@@ -92,7 +93,7 @@ export default function ComparePage() {
       </div>
 
       {/* Selected Properties Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
         {selectedProperties.map(property => (
           <PropertyCard
             key={property.id}
@@ -103,24 +104,25 @@ export default function ComparePage() {
 
       {/* Comparison Results */}
       {comparison && (
-        <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
-          <h2 className="text-xl font-semibold">Analysis Results</h2>
-          <div className="prose max-w-none">
+        <div className="bg-white rounded-lg shadow-sm p-4 xs:p-6 space-y-4">
+          <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
+          <div className="prose max-w-none text-sm xs:text-base">
             {comparison.split('\n').map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index} className="mb-3">{paragraph}</p>
             ))}
           </div>
-          <div className="flex flex-wrap gap-4 mt-6">
+          <div className="flex flex-col xs:flex-row flex-wrap gap-3 xs:gap-4 mt-4 xs:mt-6">
             {selectedProperties.map(property => (
               <button
                 key={property.id}
                 onClick={() => handleSaveToFavorites(property)}
                 disabled={savingProperty === property.id}
                 className={`
-                  px-4 py-2 text-sm rounded-lg transition-all
+                  w-full xs:w-auto px-3 xs:px-4 py-2 text-sm rounded-lg 
+                  transition-all duration-200 ease-in-out
                   ${savingProperty === property.id
                     ? 'bg-gray-200 cursor-wait'
-                    : 'bg-gray-100 hover:bg-gray-200 hover:shadow-sm'
+                    : 'bg-gray-100 hover:bg-gray-200 xs:hover:shadow-md xs:hover:transform xs:hover:-translate-y-0.5'
                   }
                 `}
               >
