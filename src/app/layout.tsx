@@ -19,19 +19,19 @@ export const metadata = {
   description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
   openGraph: {
     title: 'MERIDEX AI',
-    description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
+    description: 'Your intelligent assistant for analyzing real estate deals and providing valuable insights fast',
     images: [{
-      url: '/textPreview.png',
-      width: 1200,  // adjust these dimensions to match your actual image
-      height: 630,  // adjust these dimensions to match your actual image
+      url: 'https://meridexai.com/textPreview.png',
+      width: 1200,
+      height: 630,
       alt: 'MERIDEX AI Preview',
     }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'MERIDEX AI',
-    description: 'Your intelligent assistant for analyzing deals and making smart recommendations',
-    images: ['/textPreview.png'],
+    description: 'Your intelligent assistant for analyzing real estate deals and providing valuable insights fast',
+    images: ['https://meridexai.com/textPreview.png'],
   },
 };
 
@@ -45,6 +45,10 @@ export default function RootLayout({
       <head>
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
+        <meta property="og:image" content="https://meridexai.com/textPreview.png" />
+        <meta property="og:image:secure_url" content="https://meridexai.com/textPreview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
