@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Property } from '@/types/property';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 interface PropertyCardProps {
   property: Property;
@@ -9,12 +10,27 @@ interface PropertyCardProps {
   showDeleteButton?: boolean;
 }
 
-export function PropertyCard({ 
-  property, 
-  onDelete,
-  showDeleteButton = false 
-}: PropertyCardProps) {
+export function PropertyCard({ property, onDelete, showDeleteButton = false }: PropertyCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  console.log('Property photo URL:', property.photoUrl);
+
+  const getValidImageUrl = (url?: string) => {
+    if (!url) return null;
+    try {
+      const validUrl = new URL(url);
+      if (validUrl.protocol !== 'https:') {
+        validUrl.protocol = 'https:';
+      }
+      return validUrl.toString();
+    } catch {
+      console.error('Invalid image URL:', url);
+      return null;
+    }
+  };
+
+  const validImageUrl = getValidImageUrl(property.photoUrl);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -36,6 +52,39 @@ export function PropertyCard({
   return (
     <div className="relative">
       <div className="relative p-4 border rounded-lg shadow-sm border-gray-200">
+        <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100">
+          {validImageUrl && !imageError ? (
+            <Image
+              src={validImageUrl}
+              alt={`Photo of ${property.address}`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
+              priority={false}
+              onError={() => {
+                console.error('Image failed to load:', validImageUrl);
+                setImageError(true);
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full bg-gray-100">
+              <svg 
+                className="w-12 h-12 text-gray-300" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
+
         <div className="space-y-2">
           <h3 className="font-medium">{property.address}</h3>
           <p className="text-sm text-gray-600">{property.city}, {property.state}</p>
