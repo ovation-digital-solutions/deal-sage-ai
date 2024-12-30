@@ -1,6 +1,6 @@
 'use client';
 
-import { IconHome, IconSearch, IconCompare, IconStar } from '@/components/Icons';
+import { IconHome, IconSearch, IconCompare, IconStar, IconHistory } from '@/components/Icons';
 import { useState } from 'react';
 import { DesktopSideNavLink } from '@/components/navigation/DesktopSideNavLink';
 import { MobileSideNavLink } from '@/components/navigation/MobileSideNavLink';
@@ -52,6 +52,12 @@ export default function DashboardLayout({
         <DesktopSideNavLink href="/dashboard/favorites" icon={<IconStar className="w-4 xs:w-5 h-4 xs:h-5" />} collapsed={sidebarCollapsed}>
           Favorites
         </DesktopSideNavLink>
+        <DesktopSideNavLink 
+          href="/dashboard/analyses" 
+          icon={<IconHistory className="w-5 h-5" />}
+        >
+          Analyses
+        </DesktopSideNavLink>
 
         {/* Mobile Navigation Links */}
         <MobileSideNavLink href="/dashboard" icon={<IconHome className="w-4 xs:w-5 h-4 xs:h-5" />}>
@@ -65,6 +71,12 @@ export default function DashboardLayout({
         </MobileSideNavLink>
         <MobileSideNavLink href="/dashboard/favorites" icon={<IconStar className="w-4 xs:w-5 h-4 xs:h-5" />}>
           Favorites
+        </MobileSideNavLink>
+        <MobileSideNavLink 
+          href="/dashboard/analyses" 
+          icon={<IconHistory className="w-4 xs:w-5 h-4 xs:h-5" />}
+        >
+          Analyses
         </MobileSideNavLink>
       </aside>
 

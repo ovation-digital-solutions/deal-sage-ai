@@ -29,3 +29,20 @@ export function IconStar({ className = "w-6 h-6" }) {
     </svg>
   );
 }
+
+export const IconHistory = ({ className = "" }: { className?: string }) => (
+  <svg 
+    className={className}
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+  >
+    <path d="M12 8v4l3 3" />
+    <path d="M3.05 11a9 9 0 1 1 .5 4" />
+    <path d="M3 5v4h4" />
+  </svg>
+);

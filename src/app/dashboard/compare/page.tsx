@@ -33,22 +33,37 @@ export default function ComparePage() {
     }
   };
 
-  const handleCompare = async () => {
-    if (selectedProperties.length < 2) return;
+  const handleCompareProperties = async () => {
     setIsAnalyzing(true);
-
     try {
+      // Get comparison analysis
       const response = await fetch('/api/compare', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ properties: selectedProperties }),
       });
 
       if (!response.ok) throw new Error('Comparison failed');
       const data = await response.json();
       setComparison(data.analysis);
+
+      // Save the analysis with complete property data including images
+      await fetch('/api/analyses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          properties: selectedProperties.map(property => ({
+            id: property.id,
+            address: property.address,
+            price: property.price,
+            image_url: property.photoUrl,
+            // Include any other necessary property data
+          })),
+          analysisText: data.analysis
+        }),
+      });
+
+      toast.success('Properties compared and analysis saved');
     } catch (error) {
       console.error('Comparison error:', error);
       toast.error('Failed to compare properties');
@@ -56,6 +71,8 @@ export default function ComparePage() {
       setIsAnalyzing(false);
     }
   };
+
+  
 
   const handleSaveToFavorites = async (property: Property) => {
     setSavingProperty(property.id);
@@ -116,7 +133,7 @@ export default function ComparePage() {
             </button>
           )}
           <button
-            onClick={handleCompare}
+            onClick={handleCompareProperties}
             disabled={selectedProperties.length < 2 || isAnalyzing}
             className={`
               inline-flex items-center justify-center
