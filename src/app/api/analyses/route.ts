@@ -100,7 +100,7 @@ export async function DELETE(request: Request) {
     }
 
     const result = await pool.query(
-      'DELETE FROM property_analyses WHERE id = $1 AND user_id = $2 RETURNING *',
+      'DELETE FROM property_analyses WHERE id::text = $1 AND user_id = $2 RETURNING *',
       [analysisId, token]
     );
 

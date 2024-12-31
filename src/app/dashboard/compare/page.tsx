@@ -94,11 +94,11 @@ export default function ComparePage() {
       if (!response.ok) throw new Error('Comparison failed');
       const data = await response.json();
       
-      // Add new analysis to the beginning of the array
+      // Add new analysis to the beginning of the array with a smaller ID
       setAnalyses(prev => [{
         properties: [...selectedProperties],
         analysis: data.analysis,
-        id: Date.now().toString() // Add unique id for each analysis
+        id: Math.floor(Math.random() * 1000000).toString() // Use smaller numbers that PostgreSQL can handle
       }, ...prev]);
       
       toast.success('Properties compared successfully');
@@ -231,6 +231,21 @@ export default function ComparePage() {
     });
   };
 
+  const handleDeleteAnalysis = (analysisId: string) => {
+    // Remove the analysis from state
+    const updatedAnalyses = analyses.filter(analysis => analysis.id !== analysisId);
+    setAnalyses(updatedAnalyses);
+    
+    // Update session storage
+    if (updatedAnalyses.length === 0) {
+      sessionStorage.removeItem('analyses');
+    } else {
+      sessionStorage.setItem('analyses', JSON.stringify(updatedAnalyses));
+    }
+    
+    toast.success('Analysis deleted successfully');
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
       {/* Header Section */}
@@ -311,10 +326,7 @@ export default function ComparePage() {
                   Regenerate Analysis
                 </button>
                 <button
-                  onClick={() => {
-                    const updatedAnalyses = analyses.filter((_, i) => i !== index);
-                    setAnalyses(updatedAnalyses);
-                  }}
+                  onClick={() => handleDeleteAnalysis(analysis.id)}
                   className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                 >
                   Delete Analysis
