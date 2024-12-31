@@ -424,33 +424,26 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-2 xs:mt-3 grid grid-cols-3 gap-1 xs:gap-2 text-[10px] xs:text-xs">
-            {dashboardData.priceTrends?.[dashboardData.priceTrends.length - 1] ? (
-              <>
-                <div className="text-center p-2 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">Total Analyses</p>
-                  <p className="font-semibold text-purple-600">
-                    {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalAnalysesRun}
-                  </p>
-                </div>
-                <div className="text-center p-2 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">Properties Analyzed</p>
-                  <p className="font-semibold text-green-600">
-                    {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalPropertiesAnalyzed}
-                  </p>
-                </div>
-                <div className="text-center p-2 bg-gray-50 rounded-md">
-                  <p className="text-gray-600">Saved Properties</p>
-                  <p className="font-semibold text-yellow-600">
-                    {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalFavorites}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <div className="col-span-3 text-center text-gray-500">
-                No activity data available
-              </div>
-            )}
+          {/* Metrics under the graph */}
+          <div className="mt-2 xs:mt-3 grid grid-cols-3 gap-2">
+            <div className="text-center p-2.5 bg-white rounded-lg shadow-sm">
+              <p className="text-[11px] text-gray-500 mb-1.5">Total Analyses</p>
+              <p className="text-xl font-bold text-gray-900">
+                {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalAnalysesRun}
+              </p>
+            </div>
+            <div className="text-center p-2.5 bg-white rounded-lg shadow-sm">
+              <p className="text-[11px] text-gray-500 mb-1.5">Properties Analyzed</p>
+              <p className="text-xl font-bold text-gray-900">
+                {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalPropertiesAnalyzed}
+              </p>
+            </div>
+            <div className="text-center p-2.5 bg-white rounded-lg shadow-sm">
+              <p className="text-[11px] text-gray-500 mb-1.5">Saved Properties</p>
+              <p className="text-xl font-bold text-gray-900">
+                {dashboardData.priceTrends[dashboardData.priceTrends.length - 1].totalFavorites}
+              </p>
+            </div>
           </div>
         </div>
 
