@@ -75,3 +75,48 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Delete an analysis
+export async function DELETE(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const analysisId = url.searchParams.get('id');
+
+    if (!analysisId) {
+      return NextResponse.json(
+        { error: 'Analysis ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const result = await pool.query(
+      'DELETE FROM property_analyses WHERE id = $1 AND user_id = $2 RETURNING *',
+      [analysisId, token]
+    );
+
+    if (result.rowCount === 0) {
+      return NextResponse.json(
+        { error: 'Analysis not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('Delete analysis error:', err);
+    return NextResponse.json(
+      { error: 'Failed to delete analysis' },
+      { status: 500 }
+    );
+  }
+}

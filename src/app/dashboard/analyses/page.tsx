@@ -6,11 +6,10 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 
 interface Property {
-  id: number;
+  id: string;
   address: string;
   price: number;
   image_url: string;
-  // Add any other property fields you're using
 }
 
 interface Analysis {
@@ -49,6 +48,24 @@ export default function AnalysesPage() {
     fetchAnalyses();
   }, [router]);
 
+  const handleDelete = async (analysisId: number) => {
+    try {
+      const response = await fetch(`/api/analyses?id=${analysisId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete analysis');
+      }
+
+      setAnalyses(prev => prev.filter(analysis => analysis.id !== analysisId));
+      toast.success('Analysis deleted successfully');
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      toast.error('Failed to delete analysis');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -78,17 +95,23 @@ export default function AnalysesPage() {
                     {format(new Date(analysis.created_at), 'MMM d, yyyy h:mm a')}
                   </p>
                 </div>
+                <button
+                  onClick={() => handleDelete(analysis.id)}
+                  className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg 
+                           hover:bg-red-200 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete Analysis
+                </button>
               </div>
               
-              <div className="prose max-w-none">
-                {analysis.analysis_text.split('\n').map((paragraph, index) => (
-                  <p key={index} className="mb-3">{paragraph}</p>
-                ))}
-              </div>
-              
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Properties Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 {analysis.property_data.map((property: Property) => (
-                  <div key={property.id} className="p-4 bg-gray-50 rounded-lg overflow-hidden">
+                  <div key={property.id} className="p-4 bg-gray-50 rounded-lg">
                     {property.image_url && (
                       <div className="relative w-full h-40 mb-3">
                         <Image
@@ -97,15 +120,19 @@ export default function AnalysesPage() {
                           fill
                           className="object-cover rounded-lg"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder-house.jpg';
-                          }}
                         />
                       </div>
                     )}
                     <h4 className="font-medium">{property.address}</h4>
                     <p className="text-sm text-gray-600">${property.price.toLocaleString()}</p>
                   </div>
+                ))}
+              </div>
+
+              {/* Analysis Text */}
+              <div className="prose max-w-none">
+                {analysis.analysis_text.split('\n').map((paragraph, index) => (
+                  <p key={index} className="mb-3 text-gray-700">{paragraph}</p>
                 ))}
               </div>
             </div>

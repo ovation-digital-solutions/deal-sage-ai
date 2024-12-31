@@ -6,9 +6,20 @@ import { toast } from 'react-hot-toast';
 
 export default function ComparePage() {
   const [selectedProperties, setSelectedProperties] = useState<Property[]>([]);
-  const [comparison, setComparison] = useState<string>('');
+  const [analyses, setAnalyses] = useState<{ properties: Property[]; analysis: string }[]>(() => {
+    if (typeof window !== 'undefined') {
+      return JSON.parse(sessionStorage.getItem('analyses') || '[]');
+    }
+    return [];
+  });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [savingProperty, setSavingProperty] = useState<string | null>(null);
+
+  // Add useEffect for analyses
+  useEffect(() => {
+    if (analyses.length > 0) {
+      sessionStorage.setItem('analyses', JSON.stringify(analyses));
+    }
+  }, [analyses]);
 
   useEffect(() => {
     const loadSelectedProperties = () => {
@@ -26,17 +37,11 @@ export default function ComparePage() {
     // Update localStorage
     localStorage.setItem('selectedProperties', JSON.stringify(updatedProperties));
     toast.success('Property removed from comparison');
-    
-    // Clear comparison if less than 2 properties
-    if (updatedProperties.length < 2) {
-      setComparison('');
-    }
   };
 
   const handleCompareProperties = async () => {
     setIsAnalyzing(true);
     try {
-      // Get comparison analysis
       const response = await fetch('/api/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,25 +50,14 @@ export default function ComparePage() {
 
       if (!response.ok) throw new Error('Comparison failed');
       const data = await response.json();
-      setComparison(data.analysis);
-
-      // Save the analysis with complete property data including images
-      await fetch('/api/analyses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          properties: selectedProperties.map(property => ({
-            id: property.id,
-            address: property.address,
-            price: property.price,
-            image_url: property.photoUrl,
-            // Include any other necessary property data
-          })),
-          analysisText: data.analysis
-        }),
-      });
-
-      toast.success('Properties compared and analysis saved');
+      
+      // Add new analysis to the beginning of the array
+      setAnalyses(prev => [{
+        properties: [...selectedProperties],
+        analysis: data.analysis
+      }, ...prev]);
+      
+      toast.success('Properties compared successfully');
     } catch (error) {
       console.error('Comparison error:', error);
       toast.error('Failed to compare properties');
@@ -75,38 +69,63 @@ export default function ComparePage() {
   
 
   const handleSaveToFavorites = async (property: Property) => {
-    setSavingProperty(property.id);
     try {
       const response = await fetch('/api/properties/favorite', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...property,
-          id: property.id || property.address
-        })
+          id: property.id,
+          address: property.address,
+          price: property.price,
+          photoUrl: property.photoUrl,
+          propertyDetails: property.propertyDetails,
+          sqft: property.sqft
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to save property');
+        throw new Error('Failed to save to favorites');
       }
-      
-      toast.success(`${property.address} saved to favorites!`);
+
+      toast.success(`${property.address} saved to favorites`);
     } catch (error) {
-      console.error('Error saving to favorites:', error);
+      console.error('Save to favorites error:', error);
       toast.error('Failed to save to favorites');
-    } finally {
-      setSavingProperty(null);
     }
   };
 
   const handleClearAll = () => {
     setSelectedProperties([]);
     localStorage.removeItem('selectedProperties');
-    setComparison('');
+    sessionStorage.removeItem('currentComparison');
     toast.success('All properties cleared from comparison');
+  };
+
+  const handleSaveToAnalyses = async (item: { properties: Property[]; analysis: string }) => {
+    try {
+      const response = await fetch('/api/analyses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          properties: item.properties.map(property => ({
+            id: property.id,
+            address: property.address,
+            price: property.price,
+            image_url: property.photoUrl,
+          })),
+          analysisText: item.analysis
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save analysis');
+      }
+
+      toast.success('Analysis saved successfully');
+    } catch (error) {
+      console.error('Save analysis error:', error);
+      toast.error('Failed to save analysis');
+    }
   };
 
   return (
@@ -175,36 +194,70 @@ export default function ComparePage() {
         ))}
       </div>
 
-      {/* Comparison Results */}
-      {comparison && (
-        <div className="bg-white rounded-lg shadow-sm p-4 xs:p-6 space-y-4">
-          <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
-          <div className="prose max-w-none text-sm xs:text-base">
-            {comparison.split('\n').map((paragraph, index) => (
-              <p key={index} className="mb-3">{paragraph}</p>
-            ))}
+      {/* All Analyses */}
+      <div className="space-y-6">
+        {analyses.map((item, index) => (
+          <div key={index} className="bg-white rounded-lg shadow-sm p-4 xs:p-6 space-y-4">
+            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-4">
+              <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleCompareProperties}
+                  className="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  Regenerate Analysis
+                </button>
+                <button
+                  onClick={() => {
+                    const updatedAnalyses = analyses.filter((_, i) => i !== index);
+                    setAnalyses(updatedAnalyses);
+                  }}
+                  className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  Delete Analysis
+                </button>
+                <button
+                  onClick={() => handleSaveToAnalyses(item)}
+                  className="px-4 py-2 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                >
+                  Save to Analyses
+                </button>
+              </div>
+            </div>
+            
+            {/* Properties Grid with Save to Favorites */}
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
+              {item.properties.map(property => (
+                <div key={property.id} className="relative">
+                  <PropertyCard
+                    property={property}
+                    showDeleteButton={false}
+                  />
+                  <button
+                    onClick={() => handleSaveToFavorites(property)}
+                    className="mt-2 w-full px-4 py-2 text-sm bg-green-50 text-green-600 
+                             rounded-lg hover:bg-green-100 transition-colors
+                             flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    Save to Favorites
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Analysis Text */}
+            <div className="prose max-w-none text-sm xs:text-base">
+              {item.analysis.split('\n').map((paragraph, pIndex) => (
+                <p key={pIndex} className="mb-3">{paragraph}</p>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col xs:flex-row flex-wrap gap-3 xs:gap-4 mt-4 xs:mt-6">
-            {selectedProperties.map(property => (
-              <button
-                key={property.id}
-                onClick={() => handleSaveToFavorites(property)}
-                disabled={savingProperty === property.id}
-                className={`
-                  w-full xs:w-auto px-3 xs:px-4 py-2 text-sm rounded-lg 
-                  transition-all duration-200 ease-in-out
-                  ${savingProperty === property.id
-                    ? 'bg-gray-200 cursor-wait'
-                    : 'bg-gray-100 hover:bg-gray-200 xs:hover:shadow-md xs:hover:transform xs:hover:-translate-y-0.5'
-                  }
-                `}
-              >
-                {savingProperty === property.id ? 'Saving...' : `Save ${property.address} to Favorites`}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }
