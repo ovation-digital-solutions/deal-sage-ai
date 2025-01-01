@@ -367,7 +367,7 @@ export default function BrowsePage() {
                 <PropertyCard property={property} />
                 <button
                   onClick={() => handlePropertySelect(property)}
-                  className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-10"
+                  className="absolute -top-1 -right-1 p-1 bg-white rounded-full shadow hover:bg-gray-100 transition-colors z-20"
                   title={selectedProperties.some(p => p.id === property.id) ? "Remove from comparison" : "Add to comparison"}
                 >
                   <svg 
@@ -398,18 +398,18 @@ export default function BrowsePage() {
 
         {/* Selected Properties Bar */}
         {selectedProperties.length > 0 && (
-          <div className="fixed bottom-0 left-0 xs:left-14 sm:left-56 lg:left-64 right-0 bg-white border-t border-gray-200 p-3 xs:p-4 shadow-lg">
-            <div className="max-w-7xl mx-auto flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-0">
-              <div className="flex items-center gap-4">
-                <span className="font-medium text-sm xs:text-base">
-                  {selectedProperties.length} properties selected
-                </span>
-              </div>
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white border border-gray-200 
+                          shadow-lg rounded-full z-30 p-1.5 xs:p-2">
+            <div className="flex items-center gap-3">
+              <span className="text-sm pl-3">
+                {selectedProperties.length} selected
+              </span>
               <button
                 onClick={handleCompare}
-                className="w-full xs:w-auto px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 text-sm xs:text-base transition-colors"
+                className="px-3 py-1.5 bg-black text-white text-sm rounded-full 
+                         hover:bg-gray-800 transition-colors"
               >
-                Compare Selected
+                Compare
               </button>
             </div>
           </div>
