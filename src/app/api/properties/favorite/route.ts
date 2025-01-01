@@ -37,7 +37,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    // Get user ID from token
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
@@ -51,19 +50,32 @@ export async function POST(req: Request) {
     const userId = parseInt(token);
     const propertyData = await req.json();
     
-    console.log('Received property data:', propertyData); // Debug log
+    // Construct web_url if it's not present
+    if (!propertyData.web_url) {
+      const formattedAddress = propertyData.address
+        ?.replace(/Unit.*|Apt.*|#.*$/i, '')
+        .replace(/[^\w\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-');
+      
+      const formattedCity = propertyData.city?.replace(/\s+/g, '-') || '';
+      const stateCode = propertyData.state;
+      const propertyId = propertyData.id;
+
+      propertyData.web_url = `https://www.realtor.com/realestateandhomes-detail/${formattedAddress}_${formattedCity}_${stateCode}_${propertyId}`;
+    }
 
     // Make sure we have required fields
-    if (!propertyData.id && !propertyData.address) {
+    if (!propertyData.id) {
       return NextResponse.json(
         { error: 'Missing property identifier' },
         { status: 400 }
       );
     }
 
-    // Use address as ID if no ID provided
-    const propertyId = propertyData.id || propertyData.address;
-    
+    // Use property_id as identifier for consistency
+    const propertyId = propertyData.id;
+
     // Check if property already exists in favorites
     const existingResult = await pool.query(
       'SELECT id FROM favorite_properties WHERE user_id = $1 AND property_id = $2',
@@ -79,7 +91,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('Save favorite error details:', err); // More detailed error logging
+    console.error('Save favorite error details:', err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to save to favorites' },
       { status: 500 }

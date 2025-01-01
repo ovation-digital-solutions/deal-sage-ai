@@ -32,6 +32,7 @@ export interface Property {
   highlights: string[];
   propertyDetails: PropertyDetails;
   photoUrl?: string;
+  web_url?: string;
 }
 
 export interface ApiError {

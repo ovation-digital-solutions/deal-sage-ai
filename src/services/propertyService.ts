@@ -116,6 +116,7 @@ interface MergedPropertyData {
   highlights: string[];
   propertyDetails: PropertyDetails;
   photoUrl?: string;
+  web_url?: string;
 }
 
 interface SearchParams {
@@ -405,10 +406,28 @@ export class PropertyService {
     }
   }
 
+  private constructWebUrl(property: BasicProperty): string {
+    const formattedAddress = property.location.address.line
+      ?.replace(/Unit.*|Apt.*|#.*$/i, '')
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+    
+    const formattedCity = property.location.address.city?.replace(/\s+/g, '-') || '';
+    const stateCode = property.location.address.state_code;
+    const propertyId = property.property_id;
+
+    return `https://www.realtor.com/realestateandhomes-detail/${formattedAddress}_${formattedCity}_${stateCode}_${propertyId}`;
+  }
+
   private async mergePropertyData(basicProperty: BasicProperty): Promise<MergedPropertyData> {
     const photoUrl = await this.getPropertyPhotos(basicProperty.property_id);
     
-    // Extract property details from the API response
+    // Construct web_url using the BasicProperty type
+    const web_url = this.constructWebUrl(basicProperty);
+
+    console.log('Created web_url:', web_url); // Add this line
+
     const sqft = basicProperty.listing?.sqft || 
                  basicProperty.description?.sqft || 
                  0;
@@ -465,7 +484,8 @@ export class PropertyService {
         bathrooms: bathrooms.toString(),
         propertyTax: 'N/A'
       },
-      photoUrl: photoUrl
+      photoUrl: photoUrl,
+      web_url: web_url
     };
 
     // Debug log

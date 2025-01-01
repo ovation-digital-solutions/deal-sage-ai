@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Property } from '@/types/property';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface PropertyCardProps {
   property: Property;
@@ -104,6 +105,19 @@ export function PropertyCard({ property, onDelete, showDeleteButton = false }: P
               )}
               {property.sqft && <p>{property.sqft.toLocaleString()} sqft</p>}
             </div>
+
+            {property.web_url && (
+              <div className="mt-2">
+                <Link
+                  href={property.web_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  View on Realtor.com
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 
