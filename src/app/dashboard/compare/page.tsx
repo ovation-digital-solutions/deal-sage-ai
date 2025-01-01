@@ -315,7 +315,7 @@ export default function ComparePage() {
       {/* All Analyses */}
       <div className="space-y-6">
         {analyses.map((analysis, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm p-4 xs:p-6 space-y-4">
+          <div key={index} className="bg-white rounded-lg shadow-sm p-3 xs:p-4 sm:p-6 space-y-4">
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-4">
               <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
               <div className="flex flex-wrap gap-3">
@@ -366,35 +366,51 @@ export default function ComparePage() {
             </div>
 
             {/* Chat Interface */}
-            <div className="mt-6 border-t pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Chat about this Analysis</h3>
+            <div className="mt-4 sm:mt-6 border-t pt-4">
+              <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-4 gap-2">
+                <h3 className="text-base sm:text-lg font-semibold">Chat about this Analysis</h3>
                 <button
                   onClick={() => clearChat(analysis.id)}
-                  className="text-sm text-gray-500 hover:text-gray-700"
+                  className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline"
                 >
                   Clear Chat
                 </button>
               </div>
               
               {/* Chat Messages */}
-              <div className="space-y-4 mb-4 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2">
                 {(chats[analysis.id] || []).map((message, i) => (
                   <div
                     key={i}
-                    className={`p-3 rounded-lg ${
+                    className={`p-2 xs:p-3 rounded-lg ${
                       message.role === 'user'
-                        ? 'bg-gray-100 ml-auto max-w-[80%]'
-                        : 'bg-blue-50 mr-auto max-w-[80%]'
+                        ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
+                        : 'bg-blue-50 mr-auto max-w-[85%] sm:max-w-[75%]'
                     }`}
                   >
-                    {message.content}
+                    {message.role === 'user' ? (
+                      <p className="text-sm sm:text-base">{message.content}</p>
+                    ) : (
+                      <ul className="space-y-2 list-none text-sm sm:text-base">
+                        {message.content.split('\n').map((point, index) => (
+                          point.trim() && (
+                            <li key={index} className="flex items-start gap-3">
+                              <span className="text-gray-400 flex-shrink-0">•</span>
+                              <span>{point.replace(/^[•\-]\s*/, '')}</span>
+                            </li>
+                          )
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={(e) => handleChatSubmit(e, analysis.id, analysis)} className="flex gap-2">
+              <form 
+                onSubmit={(e) => handleChatSubmit(e, analysis.id, analysis)} 
+                className="flex flex-col xs:flex-row gap-2"
+              >
                 <input
                   type="text"
                   value={chatInput[analysis.id] || ''}
@@ -402,20 +418,30 @@ export default function ComparePage() {
                     ...prev,
                     [analysis.id]: e.target.value
                   }))}
-                  placeholder="Ask a question about this analysis..."
-                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ask a question..."
+                  className="flex-1 px-3 py-2 text-sm sm:text-base border rounded-lg 
+                           focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loadingChats[analysis.id]}
                 />
                 <button
                   type="submit"
                   disabled={loadingChats[analysis.id]}
-                  className={`px-4 py-2 rounded-lg text-white ${
+                  className={`px-4 py-2 rounded-lg text-white text-sm sm:text-base 
+                             whitespace-nowrap ${
                     loadingChats[analysis.id]
                       ? 'bg-gray-400'
                       : 'bg-black hover:bg-gray-800'
                   }`}
                 >
-                  {loadingChats[analysis.id] ? 'Sending...' : 'Send'}
+                  {loadingChats[analysis.id] ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      Sending
+                    </span>
+                  ) : 'Send'}
                 </button>
               </form>
             </div>

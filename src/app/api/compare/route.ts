@@ -34,7 +34,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const message = `Please compare these properties and provide insights:
+    const message = `Compare these properties concisely:
     
 ${properties.map((p, i) => `
 Property ${i + 1}:
@@ -45,19 +45,18 @@ Property ${i + 1}:
 - Bathrooms: ${p.propertyDetails?.bathrooms}
 `).join('\n')}
 
-Please provide:
-1. Price Comparison
-2. Value Analysis
-3. Key Differences
-4. Investment Potential
-5. Recommendation
+Provide a focused analysis with:
+1. Price Comparison: Include price per sqft and overall value assessment
+2. Key Features: Compare size, bedrooms, bathrooms, and any standout differences
+3. Investment Perspective: Brief assessment of potential value or opportunities
+4. Quick Recommendation: Which property might be better and why
 
-Keep the analysis concise and focused on the most important factors.`;
+Keep each section to 2-3 clear points. Focus on actionable insights and meaningful differences.`;
 
     try {
       const response = await anthropic.messages.create({
         model: 'claude-3-sonnet-20240229',
-        max_tokens: 1500,
+        max_tokens: 600,
         messages: [{
           role: 'user',
           content: message,
