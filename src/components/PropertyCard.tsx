@@ -51,8 +51,8 @@ export function PropertyCard({ property, onDelete, showDeleteButton = false }: P
 
   return (
     <div className="relative">
-      <div className="relative p-4 border rounded-lg shadow-sm border-gray-200">
-        <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100">
+      <div className="relative p-4 border rounded-lg shadow-sm border-gray-200 h-[400px] flex flex-col">
+        <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
           {validImageUrl && !imageError ? (
             <Image
               src={validImageUrl}
@@ -85,17 +85,25 @@ export function PropertyCard({ property, onDelete, showDeleteButton = false }: P
           )}
         </div>
 
-        <div className="space-y-2">
-          <h3 className="font-medium">{property.address}</h3>
-          <p className="text-sm text-gray-600">{property.city}, {property.state}</p>
-          <p className="text-lg font-bold">${property.price?.toLocaleString()}</p>
-          <div className="text-sm text-gray-500">
-            {property.propertyDetails && (
-              <p>
-                {property.propertyDetails.bedrooms} beds • {property.propertyDetails.bathrooms} baths
-              </p>
-            )}
-            {property.sqft && <p>{property.sqft.toLocaleString()} sqft</p>}
+        <div className="flex flex-col flex-grow">
+          <div className="h-full flex flex-col">
+            <div className="min-h-[4rem]">
+              <h3 className="font-medium text-base line-clamp-2 mb-1">{property.address}</h3>
+              <p className="text-sm text-gray-600">{property.city}, {property.state}</p>
+            </div>
+
+            <div className="min-h-[2rem]">
+              <p className="text-lg font-bold">${property.price?.toLocaleString()}</p>
+            </div>
+
+            <div className="text-sm text-gray-500 min-h-[3rem]">
+              {property.propertyDetails && (
+                <p className="mb-1">
+                  {property.propertyDetails.bedrooms} beds • {property.propertyDetails.bathrooms} baths
+                </p>
+              )}
+              {property.sqft && <p>{property.sqft.toLocaleString()} sqft</p>}
+            </div>
           </div>
         </div>
 

@@ -320,22 +320,16 @@ export default function ComparePage() {
               <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={handleCompareProperties}
-                  className="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                  onClick={() => handleSaveToAnalyses(analysis)}
+                  className="px-4 py-2 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
                 >
-                  Regenerate Analysis
+                  Save Analysis
                 </button>
                 <button
                   onClick={() => handleDeleteAnalysis(analysis.id)}
                   className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
                 >
                   Delete Analysis
-                </button>
-                <button
-                  onClick={() => handleSaveToAnalyses(analysis)}
-                  className="px-4 py-2 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                >
-                  Save to Analyses
                 </button>
               </div>
             </div>
