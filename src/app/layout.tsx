@@ -33,11 +33,6 @@ export const metadata = {
     description: 'Your intelligent assistant for analyzing real estate deals and providing valuable insights fast',
     images: ['https://meridexai.com/textPreview.png'],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    minimumScale: 1,
-  },
 };
 
 export default function RootLayout({
