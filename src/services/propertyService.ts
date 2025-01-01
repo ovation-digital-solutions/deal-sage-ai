@@ -118,6 +118,22 @@ interface MergedPropertyData {
   photoUrl?: string;
 }
 
+interface SearchParams {
+  city: string;
+  state: string;
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  sqftRange?: {
+    min?: number;
+    max?: number;
+  };
+  bedrooms?: string;
+  bathrooms?: string;
+  propertyType?: string;
+}
+
 export class PropertyService {
   private readonly rapidApiKey: string;
   private readonly rapidApiHost: string;
@@ -209,9 +225,96 @@ export class PropertyService {
     return stateCode;
   }
 
-  private async getRealtyData(city: string, state: string): Promise<PropertySearchResponse> {
-    const stateCode = this.getStateCode(state);
-    console.log(`Converting state "${state}" to state code: ${stateCode}`);
+  private async getRealtyData(searchParams: SearchParams): Promise<PropertySearchResponse> {
+    const stateCode = this.getStateCode(searchParams.state);
+    console.log('Search parameters received:', JSON.stringify(searchParams, null, 2));
+
+    // Build filters object with correct property paths
+    const filters = {} as {
+      property_type?: string;
+      list_price?: { min: number; max: number };
+      building_size?: { min: number; max: number };
+      beds?: number | { min: number };
+      baths?: number | { min: number };
+    };
+
+    // Property type mapping with all possible variations
+    const propertyTypeMap: Record<string, string> = {
+      'single_family': 'single_family',
+      'multi_family': 'multi_family',
+      'condos': 'condos',
+      'commercial': 'commercial',
+      'industrial': 'industrial',
+      'retail': 'retail',
+      'townhomes': 'townhome',
+      'land': 'land'
+    };
+
+    // Add property type filter
+    if (searchParams.propertyType && searchParams.propertyType !== '') {
+      const mappedType = propertyTypeMap[searchParams.propertyType];
+      if (mappedType) {
+        filters.property_type = mappedType;
+      }
+    }
+
+    // Add price range filter
+    if (searchParams.priceRange?.min || searchParams.priceRange?.max) {
+      const minPrice = searchParams.priceRange.min ? Number(searchParams.priceRange.min) : 0;
+      const maxPrice = searchParams.priceRange.max ? Number(searchParams.priceRange.max) : 100000000;
+      
+      if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+        filters.list_price = {
+          min: minPrice,
+          max: maxPrice
+        };
+      }
+    }
+
+    // Add square footage filter
+    if (searchParams.sqftRange?.min || searchParams.sqftRange?.max) {
+      const minSqft = searchParams.sqftRange.min ? Number(searchParams.sqftRange.min) : 0;
+      const maxSqft = searchParams.sqftRange.max ? Number(searchParams.sqftRange.max) : 100000;
+      
+      if (!isNaN(minSqft) && !isNaN(maxSqft)) {
+        filters.building_size = {
+          min: minSqft,
+          max: maxSqft
+        };
+      }
+    }
+
+    // Add bedrooms filter
+    if (searchParams.bedrooms && searchParams.bedrooms !== '') {
+      const bedroomCount = parseInt(searchParams.bedrooms);
+      if (!isNaN(bedroomCount)) {
+        filters.beds = bedroomCount === 5 ? { min: 5 } : bedroomCount;
+      }
+    }
+
+    // Add bathrooms filter
+    if (searchParams.bathrooms && searchParams.bathrooms !== '') {
+      const bathroomCount = parseFloat(searchParams.bathrooms);
+      if (!isNaN(bathroomCount)) {
+        filters.baths = bathroomCount === 4 ? { min: 4 } : bathroomCount;
+      }
+    }
+
+    console.log('Constructed filters:', JSON.stringify(filters, null, 2));
+
+    const requestData = {
+      limit: 20,
+      offset: 0,
+      city: searchParams.city,
+      state_code: stateCode,
+      sort: {
+        direction: 'desc',
+        field: 'list_date'
+      },
+      filters: filters
+    };
+
+    console.log('Final API request data:', JSON.stringify(requestData, null, 2));
 
     const options = {
       method: 'POST',
@@ -221,24 +324,39 @@ export class PropertyService {
         'x-rapidapi-key': this.rapidApiKey,
         'x-rapidapi-host': this.rapidApiHost
       },
-      data: {
-        limit: 4,
-        offset: 0,
-        city: city,
-        state_code: stateCode,
-        status: ['for_sale'],
-        sort: {
-          direction: 'desc',
-          field: 'list_date'
-        },
-        filters: {
-          property_type: ['commercial', 'multi_family', 'industrial', 'retail']
-        }
-      }
+      data: requestData
     };
 
-    const response = await axios.request(options);
-    return response.data;
+    try {
+      const response = await axios.request(options);
+      console.log('API response status:', response.status);
+      console.log('API response data:', JSON.stringify(response.data, null, 2));
+      
+      // Validate response data matches filters
+      const results = response.data?.data?.home_search?.results || [];
+      console.log(`Received ${results.length} properties`);
+      
+      // Log any properties that don't match the filters
+      if (filters.list_price?.min !== undefined && filters.list_price?.max !== undefined) {
+        const invalidPrices = results.filter((prop: { list_price: number }) => 
+          prop.list_price < filters.list_price!.min || 
+          prop.list_price > filters.list_price!.max
+        );
+        if (invalidPrices.length > 0) {
+          console.warn('Properties outside price range:', 
+            invalidPrices.map((p: { property_id: string; list_price: number }) => ({
+              id: p.property_id,
+              price: p.list_price
+            }))
+          );
+        }
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
   }
 
   // Add this new method to fetch photos
@@ -363,21 +481,122 @@ export class PropertyService {
     return propertyData;
   }
 
-  public async searchProperties(city: string, state: string): Promise<Property[]> {
+  public async searchProperties(searchParams: SearchParams): Promise<Property[]> {
     try {
-      const data = await this.getRealtyData(city, state);
-      console.log('Initial properties response:', data);
-
+      const data = await this.getRealtyData(searchParams);
+      
       if (!data?.data?.home_search?.results) {
-        console.log('No properties found in search results');
+        console.log('No properties found in initial search');
         return [];
       }
 
-      const properties = await Promise.all(
+      let properties = await Promise.all(
         data.data.home_search.results.map(async (property: BasicProperty) => {
           return await this.mergePropertyData(property);
         })
       );
+
+      console.log(`Initial properties: ${properties.length}`);
+
+      // First, filter out properties without required fields
+      properties = properties.filter(prop => {
+        const hasRequiredFields = 
+          prop.photoUrl && // Must have an image
+          prop.address &&  // Must have address
+          prop.city &&     // Must have city
+          prop.state &&    // Must have state
+          prop.price &&    // Must have price
+          prop.propertyDetails.bedrooms !== 'N/A' && // Must have bedroom count
+          prop.propertyDetails.bathrooms !== 'N/A' && // Must have bathroom count
+          prop.sqft > 0;   // Must have square footage
+
+        if (!hasRequiredFields) {
+          console.log(`Removed incomplete property: ${prop.address} - Missing required fields`);
+        }
+        return hasRequiredFields;
+      });
+
+      console.log(`After required fields filter: ${properties.length} properties`);
+
+      // Apply mandatory filters (location and price)
+      if (searchParams.priceRange?.min || searchParams.priceRange?.max) {
+        const min = searchParams.priceRange?.min || 0;
+        const max = searchParams.priceRange?.max || Infinity;
+        properties = properties.filter(prop => {
+          const matches = prop.price >= min && prop.price <= max;
+          if (!matches) {
+            console.log(`Price filter removed: ${prop.address} - $${prop.price} (not in range $${min}-$${max})`);
+          }
+          return matches;
+        });
+      }
+
+      const filterMessages: string[] = [];
+
+      // Apply optional filters with feedback
+      if (properties.length > 0) {
+        // Optional: Square footage filter
+        if (searchParams.sqftRange?.min || searchParams.sqftRange?.max) {
+          const min = searchParams.sqftRange?.min || 0;
+          const max = searchParams.sqftRange?.max || Infinity;
+          
+          const sqftFiltered = properties.filter(prop => prop.sqft >= min && prop.sqft <= max);
+          
+          if (sqftFiltered.length === 0) {
+            filterMessages.push(`No properties found within ${min}-${max} sq ft range. Try expanding your search.`);
+          } else {
+            properties = sqftFiltered;
+          }
+        }
+
+        // Optional: Property type filter
+        if (searchParams.propertyType && searchParams.propertyType !== '') {
+          const typeFiltered = properties.filter(prop => 
+            prop.propertyType.toLowerCase() === searchParams.propertyType?.toLowerCase()
+          );
+          
+          if (typeFiltered.length === 0) {
+            filterMessages.push(`No ${searchParams.propertyType} properties found. Showing all property types.`);
+          } else {
+            properties = typeFiltered;
+          }
+        }
+
+        // Optional: Bedrooms filter
+        if (searchParams.bedrooms && searchParams.bedrooms !== '') {
+          const requestedBeds = parseInt(searchParams.bedrooms);
+          const bedsFiltered = properties.filter(prop => {
+            const beds = parseInt(prop.propertyDetails.bedrooms);
+            return requestedBeds === 5 ? beds >= 5 : beds === requestedBeds;
+          });
+
+          if (bedsFiltered.length === 0) {
+            filterMessages.push(`No properties found with ${requestedBeds} bedrooms. Showing all bedroom counts.`);
+          } else {
+            properties = bedsFiltered;
+          }
+        }
+
+        // Optional: Bathrooms filter
+        if (searchParams.bathrooms && searchParams.bathrooms !== '') {
+          const requestedBaths = parseFloat(searchParams.bathrooms);
+          const bathsFiltered = properties.filter(prop => {
+            const baths = parseFloat(prop.propertyDetails.bathrooms);
+            return requestedBaths === 4 ? baths >= 4 : baths === requestedBaths;
+          });
+
+          if (bathsFiltered.length === 0) {
+            filterMessages.push(`No properties found with ${requestedBaths} bathrooms. Showing all bathroom counts.`);
+          } else {
+            properties = bathsFiltered;
+          }
+        }
+      }
+
+      console.log(`Final filtered properties: ${properties.length}`);
+      if (filterMessages.length > 0) {
+        console.log('Filter messages:', filterMessages);
+      }
 
       return properties;
     } catch (error) {
