@@ -47,6 +47,13 @@ export default function MobileNavigation() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  href="/dashboard/portfolio"
+                  className="block px-4 py-2 text-slate-300 hover:text-emerald-400 transition-colors"
+                  onClick={toggleMenu}
+                >
+                  Portfolio
+                </Link>
                 <div className="px-4 py-2 text-sm text-slate-400">
                   {user?.email}
                 </div>

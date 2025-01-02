@@ -44,6 +44,16 @@ export default function Navigation() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  href="/dashboard/portfolio"
+                  className="
+                    px-4 py-2 rounded-lg text-sm font-medium
+                    text-slate-300 hover:text-emerald-400
+                    transition-all duration-200
+                  "
+                >
+                  Portfolio
+                </Link>
                 <div key={user?.email} className="text-sm text-slate-400">
                   {user?.email}
                 </div>
