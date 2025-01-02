@@ -9,9 +9,10 @@ interface PropertyCardProps {
   property: Property;
   onDelete?: (propertyId: string) => Promise<void>;
   showDeleteButton?: boolean;
+  onSaveToFavorites?: (property: Property) => void;
 }
 
-export function PropertyCard({ property, onDelete, showDeleteButton = false }: PropertyCardProps) {
+export function PropertyCard({ property, onDelete, showDeleteButton = false, onSaveToFavorites }: PropertyCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -52,6 +53,29 @@ export function PropertyCard({ property, onDelete, showDeleteButton = false }: P
 
   return (
     <div className="relative">
+      {!showDeleteButton && onSaveToFavorites && (
+        <button
+          onClick={() => onSaveToFavorites?.(property)}
+          className="absolute top-2 right-2 p-2 rounded-full bg-white/80 hover:bg-white 
+                     shadow-sm hover:shadow transition-all z-10"
+          aria-label="Save to favorites"
+        >
+          <svg 
+            className="w-5 h-5 text-red-500" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+            />
+          </svg>
+        </button>
+      )}
+
       <div className="relative p-4 border rounded-lg shadow-sm border-gray-200 h-[400px] flex flex-col">
         <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
           {validImageUrl && !imageError ? (

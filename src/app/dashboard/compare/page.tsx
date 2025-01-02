@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Property } from '@/types/property';
 import { PropertyCard } from '@/components/PropertyCard';
 import { toast } from 'react-hot-toast';
+import { PropertyCarousel } from '@/components/PropertyCarousel';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -48,6 +49,7 @@ export default function ComparePage() {
   const [chats, setChats] = useState<ChatState>({});
   const [chatInput, setChatInput] = useState<InputState>({});
   const [loadingChats, setLoadingChats] = useState<LoadingState>({});
+  const [collapsedAnalyses, setCollapsedAnalyses] = useState<{ [key: string]: boolean }>({});
 
   // Add ref for chat container
   const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -269,6 +271,13 @@ export default function ComparePage() {
     toast.success('Analysis deleted successfully');
   };
 
+  const toggleAnalysis = (analysisId: string) => {
+    setCollapsedAnalyses(prev => ({
+      ...prev,
+      [analysisId]: !prev[analysisId]
+    }));
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
       {/* Header Section */}
@@ -323,157 +332,188 @@ export default function ComparePage() {
         </div>
       </div>
 
-      {/* Selected Properties Grid */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
-        {selectedProperties.map(property => (
-          <PropertyCard
-            key={property.id}
-            property={property}
-            onDelete={handleDelete}
-            showDeleteButton={true}
-          />
-        ))}
+      {/* Selected Properties Section */}
+      <div>
+        {/* Desktop Grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
+          {selectedProperties.map(property => (
+            <PropertyCard
+              key={property.id}
+              property={property}
+              onDelete={handleDelete}
+              showDeleteButton={true}
+            />
+          ))}
+        </div>
+
+        {/* Mobile Carousel */}
+        <div className="block sm:hidden">
+          {selectedProperties.length > 0 && (
+            <PropertyCarousel
+              properties={selectedProperties}
+              onDelete={handleDelete}
+              showDeleteButton={true}
+            />
+          )}
+        </div>
       </div>
 
       {/* All Analyses */}
       <div className="space-y-6">
         {analyses.map((analysis, index) => (
           <div key={index} className="bg-white rounded-lg shadow-sm p-3 xs:p-4 sm:p-6 space-y-4">
+            {/* Analysis Header - Always visible */}
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-4">
               <h2 className="text-lg xs:text-xl font-semibold">Analysis Results</h2>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex gap-3">
                 <button
                   onClick={() => handleSaveToAnalyses(analysis)}
-                  className="px-4 py-2 text-sm bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                  className="inline-flex items-center justify-center
+                    px-4 py-2 rounded-lg text-sm font-medium
+                    bg-black text-white
+                    hover:bg-gray-800 transition-colors"
                 >
-                  Save Analysis
+                  Save
                 </button>
                 <button
                   onClick={() => handleDeleteAnalysis(analysis.id)}
-                  className="px-4 py-2 text-sm bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                  className="inline-flex items-center justify-center
+                    px-4 py-2 rounded-lg text-sm font-medium
+                    border border-red-200 text-red-600
+                    hover:bg-red-50 transition-colors"
                 >
-                  Delete Analysis
+                  Delete
                 </button>
               </div>
             </div>
-            
-            {/* Properties Grid with Save to Favorites */}
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
-              {analysis.properties.map(property => (
-                <div key={property.id} className="relative">
+
+            {/* Properties Section - Always visible */}
+            <div>
+              {/* Desktop Grid */}
+              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6">
+                {analysis.properties.map(property => (
                   <PropertyCard
+                    key={property.id}
                     property={property}
                     showDeleteButton={false}
+                    onSaveToFavorites={handleSaveToFavorites}
                   />
-                  <button
-                    onClick={() => handleSaveToFavorites(property)}
-                    className="mt-2 w-full px-4 py-2 text-sm bg-green-50 text-green-600 
-                             rounded-lg hover:bg-green-100 transition-colors
-                             flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    Save to Favorites
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Analysis Text */}
-            <div className="prose max-w-none text-sm xs:text-base">
-              {analysis.analysis.split('\n').map((paragraph, pIndex) => (
-                <p key={pIndex} className="mb-3">{paragraph}</p>
-              ))}
-            </div>
-
-            {/* Chat Interface */}
-            <div className="mt-4 sm:mt-6 border-t pt-4">
-              <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-4 gap-2">
-                <h3 className="text-base sm:text-lg font-semibold">Chat about this Analysis</h3>
-                <button
-                  onClick={() => clearChat(analysis.id)}
-                  className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline"
-                >
-                  Clear Chat
-                </button>
-              </div>
-              
-              {/* Chat Messages */}
-              <div 
-                ref={(el: HTMLDivElement | null) => {
-                  chatContainerRefs.current[analysis.id] = el;
-                }}
-                className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2"
-              >
-                {(chats[analysis.id] || []).map((message, i) => (
-                  <div
-                    key={i}
-                    data-message
-                    data-role={message.role}
-                    className={`p-2 xs:p-3 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
-                        : 'bg-blue-50 mr-auto max-w-[85%] sm:max-w-[75%]'
-                    }`}
-                  >
-                    {message.role === 'user' ? (
-                      <p className="text-sm sm:text-base">{message.content}</p>
-                    ) : (
-                      <ul className="space-y-2 list-none text-sm sm:text-base">
-                        {message.content.split('\n').map((point, index) => (
-                          point.trim() && (
-                            <li key={index} className="flex items-start gap-3">
-                              <span className="text-gray-400 flex-shrink-0">•</span>
-                              <span>{point.replace(/^[•\-]\s*/, '')}</span>
-                            </li>
-                          )
-                        ))}
-                      </ul>
-                    )}
-                  </div>
                 ))}
               </div>
 
-              {/* Chat Input */}
-              <form 
-                onSubmit={(e) => handleChatSubmit(e, analysis.id, analysis)} 
-                className="flex gap-2 w-full"
-              >
-                <input
-                  type="text"
-                  value={chatInput[analysis.id] || ''}
-                  onChange={(e) => setChatInput(prev => ({
-                    ...prev,
-                    [analysis.id]: e.target.value
-                  }))}
-                  placeholder="Ask a question..."
-                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg 
-                           focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={loadingChats[analysis.id]}
+              {/* Mobile Carousel */}
+              <div className="block sm:hidden">
+                <PropertyCarousel
+                  properties={analysis.properties}
+                  showDeleteButton={false}
+                  onSaveToFavorites={handleSaveToFavorites}
                 />
+              </div>
+            </div>
+
+            {/* Collapsible Analysis Text & Chat Section */}
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2">
                 <button
-                  type="submit"
-                  disabled={loadingChats[analysis.id]}
-                  className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-white text-sm sm:text-base 
-                             w-[80px] sm:w-[100px] flex items-center justify-center ${
-                    loadingChats[analysis.id]
-                      ? 'bg-gray-400'
-                      : 'bg-black hover:bg-gray-800'
-                  }`}
+                  onClick={() => toggleAnalysis(analysis.id)}
+                  className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label={collapsedAnalyses[analysis.id] ? "Show analysis" : "Hide analysis"}
                 >
-                  {loadingChats[analysis.id] ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                      </svg>
-                      <span className="sr-only">Sending</span>
-                    </span>
-                  ) : 'Send'}
+                  <svg 
+                    className={`w-5 h-5 transition-transform ${collapsedAnalyses[analysis.id] ? '-rotate-90' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
-              </form>
+                <h3 className="text-lg font-semibold">Analysis & Discussion</h3>
+              </div>
+
+              {/* Collapsible Content */}
+              <div className={`mt-4 space-y-6 transition-all duration-200 ease-in-out ${
+                collapsedAnalyses[analysis.id] ? 'hidden' : 'block'
+              }`}>
+                {/* Analysis Text */}
+                <div className="prose max-w-none text-sm xs:text-base">
+                  {analysis.analysis.split('\n').map((paragraph, pIndex) => (
+                    <p key={pIndex} className="mb-3">{paragraph}</p>
+                  ))}
+                </div>
+
+                {/* Chat Interface */}
+                <div className="mt-4 sm:mt-6 border-t pt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold">Chat about this Analysis</h3>
+                    <button
+                      onClick={() => clearChat(analysis.id)}
+                      className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 underline"
+                    >
+                      Clear Chat
+                    </button>
+                  </div>
+
+                  {/* Chat Messages */}
+                  <div 
+                    ref={(el: HTMLDivElement | null) => {
+                      chatContainerRefs.current[analysis.id] = el;
+                    }}
+                    className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2"
+                  >
+                    {(chats[analysis.id] || []).map((message, i) => (
+                      <div
+                        key={i}
+                        data-message
+                        data-role={message.role}
+                        className={`p-2 xs:p-3 rounded-lg ${
+                          message.role === 'user'
+                            ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
+                            : 'bg-blue-50 mr-auto max-w-[85%] sm:max-w-[75%]'
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Chat Input */}
+                  <form 
+                    onSubmit={(e) => handleChatSubmit(e, analysis.id, analysis)} 
+                    className="flex gap-2 w-full"
+                  >
+                    <input
+                      type="text"
+                      value={chatInput[analysis.id] || ''}
+                      onChange={(e) => setChatInput(prev => ({
+                        ...prev,
+                        [analysis.id]: e.target.value
+                      }))}
+                      placeholder="Ask a question..."
+                      className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={loadingChats[analysis.id]}
+                    />
+                    <button
+                      type="submit"
+                      disabled={loadingChats[analysis.id]}
+                      className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-white text-sm sm:text-base 
+                                 w-[80px] sm:w-[100px] flex items-center justify-center ${
+                        loadingChats[analysis.id]
+                          ? 'bg-gray-400'
+                          : 'bg-black hover:bg-gray-800'
+                      }`}
+                    >
+                      {loadingChats[analysis.id] ? (
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                      ) : 'Send'}
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         ))}
