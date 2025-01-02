@@ -439,7 +439,7 @@ export default function ComparePage() {
               {/* Chat Input */}
               <form 
                 onSubmit={(e) => handleChatSubmit(e, analysis.id, analysis)} 
-                className="flex flex-col xs:flex-row gap-2"
+                className="flex gap-2 w-full"
               >
                 <input
                   type="text"
@@ -449,15 +449,15 @@ export default function ComparePage() {
                     [analysis.id]: e.target.value
                   }))}
                   placeholder="Ask a question..."
-                  className="flex-1 px-3 py-2 text-sm sm:text-base border rounded-lg 
+                  className="flex-1 px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg 
                            focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={loadingChats[analysis.id]}
                 />
                 <button
                   type="submit"
                   disabled={loadingChats[analysis.id]}
-                  className={`px-4 py-2 rounded-lg text-white text-sm sm:text-base 
-                             whitespace-nowrap ${
+                  className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-white text-sm sm:text-base 
+                             w-[80px] sm:w-[100px] flex items-center justify-center ${
                     loadingChats[analysis.id]
                       ? 'bg-gray-400'
                       : 'bg-black hover:bg-gray-800'
@@ -469,7 +469,7 @@ export default function ComparePage() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                       </svg>
-                      Sending
+                      <span className="sr-only">Sending</span>
                     </span>
                   ) : 'Send'}
                 </button>
