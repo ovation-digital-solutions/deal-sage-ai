@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Property } from '@/types/property';
 import { PropertyCard } from '@/components/PropertyCard';
 import { toast } from 'react-hot-toast';
@@ -48,6 +48,29 @@ export default function ComparePage() {
   const [chats, setChats] = useState<ChatState>({});
   const [chatInput, setChatInput] = useState<InputState>({});
   const [loadingChats, setLoadingChats] = useState<LoadingState>({});
+
+  // Add ref for chat container
+  const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Add useEffect to scroll to bottom when messages change
+  useEffect(() => {
+    Object.entries(chats).forEach(([analysisId, messages]) => {
+      const container = chatContainerRefs.current[analysisId];
+      if (container && messages.length > 0) {
+        // Get all message elements in the container
+        const messageElements = container.querySelectorAll('[data-message]');
+        // Get the last response message
+        const lastResponse = Array.from(messageElements).findLast(
+          el => el.getAttribute('data-role') === 'assistant'
+        );
+        
+        if (lastResponse) {
+          // Use 'nearest' instead of 'start' to prevent over-scrolling
+          lastResponse.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+  }, [chats]);
 
   // Add useEffect for analyses
   useEffect(() => {
@@ -378,10 +401,17 @@ export default function ComparePage() {
               </div>
               
               {/* Chat Messages */}
-              <div className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2">
+              <div 
+                ref={(el: HTMLDivElement | null) => {
+                  chatContainerRefs.current[analysis.id] = el;
+                }}
+                className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2"
+              >
                 {(chats[analysis.id] || []).map((message, i) => (
                   <div
                     key={i}
+                    data-message
+                    data-role={message.role}
                     className={`p-2 xs:p-3 rounded-lg ${
                       message.role === 'user'
                         ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
