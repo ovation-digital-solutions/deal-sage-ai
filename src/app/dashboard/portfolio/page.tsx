@@ -28,10 +28,10 @@ export default function PortfolioPage() {
         if (!response.ok) throw new Error('Failed to fetch portfolio');
         const data = await response.json();
         setProperties(data.properties);
+        setIsLoading(false);
       } catch (error) {
         console.error('Fetch error:', error);
         toast.error('Failed to load portfolio');
-      } finally {
         setIsLoading(false);
       }
     };
@@ -71,8 +71,12 @@ export default function PortfolioPage() {
     if (!confirm('Are you sure you want to delete this property?')) return;
 
     try {
-      const response = await fetch(`/api/portfolio/${id}`, {
+      const response = await fetch('/api/portfolio', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
       });
 
       if (!response.ok) throw new Error('Failed to delete property');
@@ -94,16 +98,19 @@ export default function PortfolioPage() {
     if (!editForm) return;
 
     try {
-      const response = await fetch(`/api/portfolio/${editForm.id}`, {
+      const response = await fetch('/api/portfolio', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editForm)
       });
 
       if (!response.ok) throw new Error('Failed to update property');
 
+      const { property } = await response.json();
       setProperties(properties.map(p => 
-        p.id === editForm.id ? editForm : p
+        p.id === property.id ? property : p
       ));
       setEditingId(null);
       setEditForm(null);
