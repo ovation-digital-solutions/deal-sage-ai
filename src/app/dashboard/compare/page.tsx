@@ -49,7 +49,13 @@ export default function ComparePage() {
   const [chats, setChats] = useState<ChatState>({});
   const [chatInput, setChatInput] = useState<InputState>({});
   const [loadingChats, setLoadingChats] = useState<LoadingState>({});
-  const [collapsedAnalyses, setCollapsedAnalyses] = useState<{ [key: string]: boolean }>({});
+  const [collapsedAnalyses, setCollapsedAnalyses] = useState<{ [key: string]: boolean }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('collapsedAnalyses');
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
+  });
 
   // Add ref for chat container
   const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -277,6 +283,11 @@ export default function ComparePage() {
       [analysisId]: !prev[analysisId]
     }));
   };
+
+  // Add useEffect to save collapsed state changes
+  useEffect(() => {
+    localStorage.setItem('collapsedAnalyses', JSON.stringify(collapsedAnalyses));
+  }, [collapsedAnalyses]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
