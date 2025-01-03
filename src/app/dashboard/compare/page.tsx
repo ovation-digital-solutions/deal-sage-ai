@@ -56,6 +56,7 @@ export default function ComparePage() {
     }
     return {};
   });
+  const [isComparingPortfolio, setIsComparingPortfolio] = useState<{ [key: string]: boolean }>({});
 
   // Add ref for chat container
   const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -289,6 +290,47 @@ export default function ComparePage() {
     localStorage.setItem('collapsedAnalyses', JSON.stringify(collapsedAnalyses));
   }, [collapsedAnalyses]);
 
+  const handleCompareWithPortfolio = async (analysisId: string, chatMessage: ChatMessage) => {
+    try {
+      setIsComparingPortfolio(prev => ({ ...prev, [analysisId]: true }));
+      
+      const portfolioResponse = await fetch('/api/portfolio');
+      if (!portfolioResponse.ok) throw new Error('Failed to fetch portfolio');
+      const portfolioData = await portfolioResponse.json();
+      
+      const response = await fetch('/api/chat/portfolio-compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatMessage: chatMessage.content,
+          portfolioProperties: portfolioData.properties,
+          comparisonProperties: selectedProperties
+        }),
+      });
+
+      if (!response.ok) throw new Error('Portfolio comparison failed');
+      const data = await response.json();
+      
+      setChats(prev => {
+        const updated = {
+          ...prev,
+          [analysisId]: [
+            ...(prev[analysisId] || []),
+            { role: 'assistant' as const, content: data.response }
+          ]
+        };
+        localStorage.setItem('propertyChats', JSON.stringify(updated));
+        return updated;
+      });
+
+    } catch (error) {
+      console.error('Portfolio comparison error:', error);
+      toast.error('Failed to compare with portfolio');
+    } finally {
+      setIsComparingPortfolio(prev => ({ ...prev, [analysisId]: false }));
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
       {/* Header Section */}
@@ -447,10 +489,38 @@ export default function ComparePage() {
                 collapsedAnalyses[analysis.id] ? 'hidden' : 'block'
               }`}>
                 {/* Analysis Text */}
-                <div className="prose max-w-none text-sm xs:text-base">
-                  {analysis.analysis.split('\n').map((paragraph, pIndex) => (
-                    <p key={pIndex} className="mb-3">{paragraph}</p>
-                  ))}
+                <div className="space-y-4">
+                  <div className="prose max-w-none text-sm xs:text-base">
+                    {analysis.analysis.split('\n').map((paragraph, pIndex) => (
+                      <p key={pIndex} className="mb-3">{paragraph}</p>
+                    ))}
+                  </div>
+                  
+                  {/* Portfolio Comparison Button */}
+                  <button
+                    onClick={() => handleCompareWithPortfolio(analysis.id, {
+                      role: 'assistant',
+                      content: analysis.analysis
+                    })}
+                    disabled={isComparingPortfolio[analysis.id]}
+                    className={`w-full sm:w-auto px-4 py-2 rounded-lg text-sm font-medium
+                      ${isComparingPortfolio[analysis.id]
+                        ? 'bg-gray-200 text-gray-500'
+                        : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                      } transition-colors`}
+                  >
+                    {isComparingPortfolio[analysis.id] ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        Comparing with Portfolio...
+                      </span>
+                    ) : (
+                      'Compare with Portfolio'
+                    )}
+                  </button>
                 </div>
 
                 {/* Chat Interface */}
@@ -465,7 +535,7 @@ export default function ComparePage() {
                     </button>
                   </div>
 
-                  {/* Chat Messages */}
+                  {/* Chat Messages - Remove the compare button from here */}
                   <div 
                     ref={(el: HTMLDivElement | null) => {
                       chatContainerRefs.current[analysis.id] = el;
@@ -473,17 +543,18 @@ export default function ComparePage() {
                     className="space-y-3 mb-4 max-h-[300px] xs:max-h-[400px] overflow-y-auto px-2"
                   >
                     {(chats[analysis.id] || []).map((message, i) => (
-                      <div
-                        key={i}
-                        data-message
-                        data-role={message.role}
-                        className={`p-2 xs:p-3 rounded-lg ${
-                          message.role === 'user'
-                            ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
-                            : 'bg-blue-50 mr-auto max-w-[85%] sm:max-w-[75%]'
-                        }`}
-                      >
-                        {message.content}
+                      <div key={i} className="space-y-2">
+                        <div
+                          data-message
+                          data-role={message.role}
+                          className={`p-2 xs:p-3 rounded-lg ${
+                            message.role === 'user'
+                              ? 'bg-gray-100 ml-auto max-w-[85%] sm:max-w-[75%]'
+                              : 'bg-blue-50 mr-auto max-w-[85%] sm:max-w-[75%]'
+                          }`}
+                        >
+                          {message.content}
+                        </div>
                       </div>
                     ))}
                   </div>
