@@ -4,13 +4,20 @@ import { Property } from '@/types/property';
 import { cookies } from 'next/headers';
 import pool from '../../../lib/db';
 
-// Add debug logging
+// Add more detailed logging
 console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
 console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 10));
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+let anthropic: Anthropic;
+try {
+  anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+  });
+  console.log('Anthropic client initialized successfully');
+} catch (error) {
+  console.error('Error initializing Anthropic client:', error);
+  throw error;
+}
 
 // Helper function to check analysis limit
 const checkAnalysisLimit = async (userId: string) => {
@@ -133,7 +140,7 @@ Keep each section to 2-3 clear points. Focus on actionable insights and meaningf
     }
 
   } catch (error) {
-    console.error('Full error details:', error);
+    console.error('Full API error:', error);
     return NextResponse.json(
       { error: 'AI service error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
