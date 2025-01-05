@@ -4,6 +4,10 @@ import { Property } from '@/types/property';
 import { cookies } from 'next/headers';
 import pool from '../../../lib/db';
 
+// Add debug logging
+console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 10));
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
@@ -129,12 +133,9 @@ Keep each section to 2-3 clear points. Focus on actionable insights and meaningf
     }
 
   } catch (error) {
-    console.error('Comparison error:', error);
+    console.error('Full error details:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to compare properties',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'AI service error', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
