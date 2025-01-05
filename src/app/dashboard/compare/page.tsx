@@ -4,6 +4,7 @@ import { Property } from '@/types/property';
 import { PropertyCard } from '@/components/PropertyCard';
 import { toast } from 'react-hot-toast';
 import { PropertyCarousel } from '@/components/PropertyCarousel';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -29,23 +30,31 @@ type Analysis = {
 };
 
 export default function ComparePage() {
-  const [selectedProperties, setSelectedProperties] = useState<Property[]>([]);
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  const [selectedProperties, setSelectedProperties] = useState<Property[]>(() => {
+    if (typeof window !== 'undefined' && userId) {
+      const saved = localStorage.getItem(`selectedProperties_${userId}`);
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
   const [analyses, setAnalyses] = useState<Analysis[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('analyses');
+    if (typeof window !== 'undefined' && userId) {
+      const saved = sessionStorage.getItem(`analyses_${userId}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Ensure each analysis has an id
         return parsed.map((analysis: Analysis) => ({
           ...analysis,
           id: analysis.id || Date.now().toString()
         }));
       }
-      return [];
     }
     return [];
   });
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAnalyzing] = useState(false); // Removed unused setter
   const [chats, setChats] = useState<ChatState>({});
   const [chatInput, setChatInput] = useState<InputState>({});
   const [loadingChats, setLoadingChats] = useState<LoadingState>({});
@@ -83,10 +92,10 @@ export default function ComparePage() {
 
   // Add useEffect for analyses
   useEffect(() => {
-    if (analyses.length > 0) {
-      sessionStorage.setItem('analyses', JSON.stringify(analyses));
+    if (analyses.length > 0 && userId) {
+      sessionStorage.setItem(`analyses_${userId}`, JSON.stringify(analyses));
     }
-  }, [analyses]);
+  }, [analyses, userId]);
 
   useEffect(() => {
     const loadSelectedProperties = () => {
@@ -109,36 +118,46 @@ export default function ComparePage() {
   const handleDelete = async (propertyId: string) => {
     const updatedProperties = selectedProperties.filter(p => p.id !== propertyId);
     setSelectedProperties(updatedProperties);
-    // Update localStorage
-    localStorage.setItem('selectedProperties', JSON.stringify(updatedProperties));
+    // Update localStorage with user-specific key
+    if (userId) {
+      localStorage.setItem(`selectedProperties_${userId}`, JSON.stringify(updatedProperties));
+    }
     toast.success('Property removed from comparison');
   };
 
-  const handleCompareProperties = async () => {
-    setIsAnalyzing(true);
+  const handleCompareProperties = async (properties: Property[]) => {
     try {
       const response = await fetch('/api/compare', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ properties: selectedProperties }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ properties }),
       });
 
-      if (!response.ok) throw new Error('Comparison failed');
       const data = await response.json();
-      
-      // Add new analysis to the beginning of the array with a smaller ID
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          // Redirect to upgrade page if limit is reached
+          window.location.href = '/dashboard/upgrade';
+          return;
+        }
+        throw new Error(data.error || 'Comparison failed');
+      }
+
+      // Your existing success handling code...
+      const analysisResult = data.analysis;
       setAnalyses(prev => [{
         properties: [...selectedProperties],
-        analysis: data.analysis,
+        analysis: analysisResult,
         id: Math.floor(Math.random() * 1000000).toString() // Use smaller numbers that PostgreSQL can handle
       }, ...prev]);
       
       toast.success('Properties compared successfully');
     } catch (error) {
-      console.error('Comparison error:', error);
-      toast.error('Failed to compare properties');
-    } finally {
-      setIsAnalyzing(false);
+      console.error('Error:', error);
+      toast.error('An error occurred');
     }
   };
 
@@ -172,8 +191,10 @@ export default function ComparePage() {
 
   const handleClearAll = () => {
     setSelectedProperties([]);
-    localStorage.removeItem('selectedProperties');
-    sessionStorage.removeItem('currentComparison');
+    if (userId) {
+      localStorage.removeItem(`selectedProperties_${userId}`);
+      sessionStorage.removeItem(`analyses_${userId}`);
+    }
     toast.success('All properties cleared from comparison');
   };
 
@@ -331,6 +352,13 @@ export default function ComparePage() {
     }
   };
 
+  // Update localStorage effect for selectedProperties
+  useEffect(() => {
+    if (userId) {
+      localStorage.setItem(`selectedProperties_${userId}`, JSON.stringify(selectedProperties));
+    }
+  }, [selectedProperties, userId]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 xs:py-8 space-y-6 xs:space-y-8">
       {/* Header Section */}
@@ -355,7 +383,7 @@ export default function ComparePage() {
             </button>
           )}
           <button
-            onClick={handleCompareProperties}
+            onClick={() => handleCompareProperties(selectedProperties)}
             disabled={selectedProperties.length < 2 || isAnalyzing}
             className={`
               inline-flex items-center justify-center

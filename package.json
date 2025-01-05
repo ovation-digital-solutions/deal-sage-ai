@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
+    "@stripe/stripe-js": "^5.4.0",
     "@types/recharts": "^1.8.29",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
@@ -19,7 +20,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
-    "recharts": "^2.15.0"
+    "recharts": "^2.15.0",
+    "stripe": "^17.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

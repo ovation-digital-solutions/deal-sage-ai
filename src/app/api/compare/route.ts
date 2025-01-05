@@ -1,13 +1,49 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { Property } from '@/types/property';
+import { cookies } from 'next/headers';
+import pool from '../../../lib/db';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
+// Helper function to check analysis limit
+const checkAnalysisLimit = async (userId: string) => {
+  const result = await pool.query(
+    'SELECT analysis_count, is_premium FROM users WHERE id = $1',
+    [userId]
+  );
+  
+  const user = result.rows[0];
+  if (!user.is_premium && user.analysis_count >= 3) {
+    throw new Error('Analysis limit reached');
+  }
+};
+
 export async function POST(req: Request) {
   try {
+    // Check authentication
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check analysis limit
+    try {
+      await checkAnalysisLimit(token);
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message === 'Analysis limit reached') {
+        return NextResponse.json(
+          { error: 'Please upgrade to continue analyzing properties' },
+          { status: 403 }
+        );
+      }
+      throw error;
+    }
+
     console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
     
     if (!req.body) {
@@ -72,6 +108,15 @@ Keep each section to 2-3 clear points. Focus on actionable insights and meaningf
           { status: 500 }
         );
       }
+
+      // Fix the increment call by using the request URL to build the full URL
+      const baseUrl = new URL(req.url).origin;
+      await fetch(`${baseUrl}/api/analyze/increment`, { 
+        method: 'POST',
+        headers: {
+          Cookie: `token=${token}`
+        }
+      });
 
       return NextResponse.json({ analysis: firstContent.text });
 

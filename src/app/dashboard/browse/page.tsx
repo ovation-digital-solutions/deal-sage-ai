@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PropertyCard } from '@/components/PropertyCard';
 import { Property } from '@/types/property';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Price options in thousands (K) or millions (M)
 const priceOptions = [
@@ -67,6 +68,8 @@ export default function BrowsePage() {
     bathrooms: '',
     propertyType: ''
   });
+  const { user } = useAuth();
+  const userId = user?.id;
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,8 +139,10 @@ export default function BrowsePage() {
   const handleCompare = async () => {
     if (selectedProperties.length < 2) return;
     
-    // Save to localStorage for the compare page to access
-    localStorage.setItem('selectedProperties', JSON.stringify(selectedProperties));
+    // Use user-specific key for localStorage
+    if (userId) {
+      localStorage.setItem(`selectedProperties_${userId}`, JSON.stringify(selectedProperties));
+    }
     
     // Navigate to compare page
     router.push('/dashboard/compare');

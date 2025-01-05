@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 
@@ -93,6 +93,16 @@ export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const searchParams = useSearchParams();
+  const success = searchParams.get('success');
+  const sessionId = searchParams.get('session_id');
+
+  useEffect(() => {
+    if (success && sessionId) {
+      // Optionally verify the session and update UI
+      toast.success('Successfully upgraded to premium!');
+    }
+  }, [success, sessionId]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
