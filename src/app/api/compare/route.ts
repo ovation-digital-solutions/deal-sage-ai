@@ -4,21 +4,6 @@ import { Property } from '@/types/property';
 import { cookies } from 'next/headers';
 import pool from '../../../lib/db';
 
-// Add more detailed logging
-console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
-console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 10));
-
-let anthropic: Anthropic;
-try {
-  anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY!,
-  });
-  console.log('Anthropic client initialized successfully');
-} catch (error) {
-  console.error('Error initializing Anthropic client:', error);
-  throw error;
-}
-
 // Helper function to check analysis limit
 const checkAnalysisLimit = async (userId: string) => {
   const result = await pool.query(
@@ -31,6 +16,11 @@ const checkAnalysisLimit = async (userId: string) => {
     throw new Error('Analysis limit reached');
   }
 };
+
+// Initialize Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY!,
+});
 
 export async function POST(req: Request) {
   try {
@@ -55,8 +45,6 @@ export async function POST(req: Request) {
       throw error;
     }
 
-    console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
-    
     if (!req.body) {
       return NextResponse.json(
         { error: 'Request body is required' },
@@ -70,14 +58,6 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: 'Properties array is required and must not be empty' },
         { status: 400 }
-      );
-    }
-
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('ANTHROPIC_API_KEY is not configured');
-      return NextResponse.json(
-        { error: 'API configuration error' },
-        { status: 500 }
       );
     }
 
@@ -120,14 +100,19 @@ Keep each section to 2-3 clear points. Focus on actionable insights and meaningf
         );
       }
 
-      // Fix the increment call by using the request URL to build the full URL
-      const baseUrl = new URL(req.url).origin;
-      await fetch(`${baseUrl}/api/analyze/increment`, { 
-        method: 'POST',
-        headers: {
-          Cookie: `token=${token}`
-        }
-      });
+      // Use explicit HTTPS URL for production with error handling
+      try {
+        await fetch('https://meridexai.com/api/analyze/increment', { 
+          method: 'POST',
+          headers: {
+            Cookie: `token=${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (incrementError) {
+        console.error('Increment error:', incrementError);
+        // Continue even if increment fails
+      }
 
       return NextResponse.json({ analysis: firstContent.text });
 
